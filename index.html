@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Creator - Artificial Life Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="container">
+        <!-- Main Canvas -->
+        <canvas id="canvas"></canvas>
+
+        <!-- HUD Overlay -->
+        <div id="hud">
+            <!-- Top Left: Info -->
+            <div id="stats" class="panel top-left">
+                <div class="stat-row">
+                    <span class="label">FPS</span>
+                    <span id="fps" class="value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Creatures</span>
+                    <span id="creatureCount" class="value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Food</span>
+                    <span id="foodCount" class="value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Speed</span>
+                    <span id="speedDisplay" class="value">1.0x</span>
+                </div>
+            </div>
+
+            <!-- Top Right: Controls -->
+            <div id="controls" class="panel top-right">
+                <button id="playPauseBtn" class="btn btn-primary">▶ Play</button>
+                <div class="spacer"></div>
+                <div class="control-group">
+                    <label for="speedSlider">Simulation Speed</label>
+                    <select id="speedSlider" class="select">
+                        <option value="0.25">0.25x</option>
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1.0x</option>
+                        <option value="2">2x</option>
+                        <option value="5">5x</option>
+                        <option value="10">10x</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bottom Left: Camera Info -->
+            <div id="cameraInfo" class="panel bottom-left">
+                <div class="stat-row">
+                    <span class="label">Cam X</span>
+                    <span id="camX" class="value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Cam Y</span>
+                    <span id="camY" class="value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Zoom</span>
+                    <span id="zoomLevel" class="value">1.0x</span>
+                </div>
+            </div>
+
+            <!-- Bottom Right: Environment Controls -->
+            <div id="envControls" class="panel bottom-right">
+                <div class="control-group">
+                    <label for="foodSpawnRate">Food Spawn Rate</label>
+                    <input type="range" id="foodSpawnRate" min="0.1" max="10" step="0.5" value="2">
+                    <span id="foodSpawnRateValue" class="value">2</span>
+                </div>
+                <div class="control-group">
+                    <label for="foodEnergy">Food Energy</label>
+                    <input type="range" id="foodEnergy" min="10" max="200" step="10" value="50">
+                    <span id="foodEnergyValue" class="value">50</span>
+                </div>
+                <div class="control-group">
+                    <label for="maxFood">Max Food</label>
+                    <input type="range" id="maxFood" min="50" max="2000" step="50" value="500">
+                    <span id="maxFoodValue" class="value">500</span>
+                </div>
+            </div>
+
+            <!-- Help Text -->
+            <div id="help" class="panel center-bottom">
+                <p>
+                    <strong>WASD/Arrows:</strong> Pan Camera | 
+                    <strong>Mouse Wheel:</strong> Zoom | 
+                    <strong>Space:</strong> Play/Pause
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
