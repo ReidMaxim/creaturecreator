@@ -1,0 +1,205 @@
+/**
+ * World: Central state container for the simulation
+ * Manages all entities, environment settings, and world dimensions
+ */
+
+import { SpatialGrid } from './utils/spatialGrid.js';
+
+export class World {
+    constructor(width = 3000, height = 3000) {
+        // Dimensions
+        this.width = width;
+        this.height = height;
+
+        // Entity lists
+        this.creatures = [];
+        this.food = [];
+
+        // Spatial optimization
+        this.spatialGrid = new SpatialGrid(width, height, 200);
+
+        // Environment settings
+        this.settings = {
+            foodSpawnRate: 2.0,        // food per second
+            foodEnergy: 50,            // energy per food item
+            maxFood: 500,              // maximum food items
+            worldSize: width,          // for UI reference
+        };
+
+        // Simulation time
+        this.time = 0;
+        this.tick = 0;
+        this.deltaTime = 0;
+
+        // Spawning accumulator
+        this.foodSpawnAccumulator = 0;
+    }
+
+    /**
+     * Update world state for one frame
+     */
+    update(deltaTime, simulationSpeed = 1) {
+        this.deltaTime = deltaTime * simulationSpeed;
+        this.time += this.deltaTime;
+
+        // Spawn new food
+        this.updateFoodSpawning();
+
+        // Update creatures (will be implemented in creature class)
+        for (const creature of this.creatures) {
+            if (creature.update) {
+                creature.update(deltaTime * simulationSpeed, this);
+            }
+        }
+
+        // Remove dead creatures
+        this.creatures = this.creatures.filter(c => c.alive !== false);
+
+        // Rebuild spatial grid for proximity queries
+        this.rebuildSpatialGrid();
+
+        this.tick++;
+    }
+
+    /**
+     * Handle food spawning logic
+     */
+    updateFoodSpawning() {
+        if (this.food.length >= this.settings.maxFood) {
+            return;
+        }
+
+        this.foodSpawnAccumulator += this.settings.foodSpawnRate * this.deltaTime;
+
+        while (this.foodSpawnAccumulator >= 1.0) {
+            this.spawnFood();
+            this.foodSpawnAccumulator -= 1.0;
+        }
+    }
+
+    /**
+     * Spawn food at random location
+     */
+    spawnFood() {
+        if (this.food.length >= this.settings.maxFood) return;
+
+        const food = {
+            x: Math.random() * this.width,
+            y: Math.random() * this.height,
+            energy: this.settings.foodEnergy,
+            id: Math.random()
+        };
+
+        this.food.push(food);
+    }
+
+    /**
+     * Add creature to world
+     */
+    addCreature(creature) {
+        creature.x = Math.max(0, Math.min(this.width, creature.x));
+        creature.y = Math.max(0, Math.min(this.height, creature.y));
+        this.creatures.push(creature);
+    }
+
+    /**
+     * Remove food item
+     */
+    removeFood(foodIndex) {
+        if (foodIndex >= 0 && foodIndex < this.food.length) {
+            this.food.splice(foodIndex, 1);
+        }
+    }
+
+    /**
+     * Get nearby entities for proximity queries
+     */
+    getNearby(x, y, radius, type = 'all') {
+        const candidates = this.spatialGrid.getNearby(x, y, radius);
+        const result = [];
+
+        for (const entity of candidates) {
+            const dx = entity.x - x;
+            const dy = entity.y - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < radius) {
+                if (type === 'all') {
+                    result.push(entity);
+                } else if (type === 'creatures' && entity.isCreature) {
+                    result.push(entity);
+                } else if (type === 'food' && !entity.isCreature) {
+                    result.push(entity);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Rebuild spatial grid from all entities
+     */
+    rebuildSpatialGrid() {
+        this.spatialGrid.clear();
+
+        for (const creature of this.creatures) {
+            this.spatialGrid.insert(creature);
+        }
+
+        for (const food of this.food) {
+            this.spatialGrid.insert(food);
+        }
+    }
+
+    /**
+     * Wrap position to world bounds (toroidal topology)
+     */
+    wrapPosition(x, y) {
+        return {
+            x: ((x % this.width) + this.width) % this.width,
+            y: ((y % this.height) + this.height) % this.height
+        };
+    }
+
+    /**
+     * Clamp position to world bounds (box topology)
+     */
+    clampPosition(x, y) {
+        return {
+            x: Math.max(0, Math.min(this.width, x)),
+            y: Math.max(0, Math.min(this.height, y))
+        };
+    }
+
+    /**
+     * Check if position is within world
+     */
+    isInBounds(x, y) {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
+    }
+
+    /**
+     * Get world statistics
+     */
+    getStats() {
+        return {
+            creatures: this.creatures.length,
+            food: this.food.length,
+            time: this.time,
+            tick: this.tick
+        };
+    }
+
+    /**
+     * Reset world to initial state
+     */
+    reset() {
+        this.creatures = [];
+        this.food = [];
+        this.time = 0;
+        this.tick = 0;
+        this.foodSpawnAccumulator = 0;
+        this.spatialGrid.clear();
+    }
+}
