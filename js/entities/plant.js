@@ -24,8 +24,13 @@ export class Plant {
         this.age += deltaTime;
         const zone = world.getZoneAt(this.x, this.y);
         this.zoneType = zone.type;
+
+        // Phase 29: Apply seasonal effects to plant growth
+        const seasonalEffects = world.getSeasonalEffects ? world.getSeasonalEffects() : { plantGrowth: 1 };
+        const envEffects = world.getEnvironmentEffects();
+
         this.energy = Math.min(this.maxEnergy, this.energy + this.growthRate
-            * zone.plantGrowth * world.getEnvironmentEffects().plantGrowth * deltaTime);
+            * zone.plantGrowth * envEffects.plantGrowth * seasonalEffects.plantGrowth * deltaTime);
         this.seedTimer -= deltaTime;
         if (this.seedTimer <= 0 && this.energy >= this.maxEnergy * 0.55) {
             world.queuePlantSeed(this);

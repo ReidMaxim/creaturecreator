@@ -43,7 +43,22 @@ export const GENE_LIMITS = {
     armor: [0, 1],
     fin: [0, 1],
     finAngle: [-0.45, 0.45],
-    motorLength: [0.55, 1.45]
+    motorLength: [0.55, 1.45],
+    // Phase 29: Disease system
+    immunity: [0, 1],
+    diseaseResistance: [0, 1],
+    pathogenTolerance: [0, 1],
+    // Phase 29: Seasonal adaptation
+    coldAdaptation: [0, 1],
+    heatAdaptation: [0, 1],
+    seasonalMetabolism: [0.5, 1.5],
+    // Phase 29: Niche specialization
+    burrowing: [0, 1],
+    climbing: [0, 1],
+    nocturnal: [0, 1],
+    waterDepthPreference: [0, 1],
+    surfaceFeeding: [0, 1],
+    deepWaterForaging: [0, 1]
 };
 
 // A small policy vector keeps behavior heritable without introducing a
@@ -114,7 +129,22 @@ export class Genome {
         this.fin = bounded(values.fin, 0, 1, randomFloat(0.25, 0.85));
         this.finAngle = bounded(values.finAngle, -0.45, 0.45, randomFloat(-0.18, 0.18));
         this.motorLength = bounded(values.motorLength, 0.55, 1.45, randomFloat(0.8, 1.2));
-        this.neuralWeights = {};
+                // Phase 29: Disease system genes
+                this.immunity = bounded(values.immunity, 0, 1, randomFloat(0.2, 0.6));
+                this.diseaseResistance = bounded(values.diseaseResistance, 0, 1, randomFloat(0.15, 0.55));
+                this.pathogenTolerance = bounded(values.pathogenTolerance, 0, 1, randomFloat(0.1, 0.5));
+                // Phase 29: Seasonal adaptation genes
+                this.coldAdaptation = bounded(values.coldAdaptation, 0, 1, randomFloat(0.2, 0.7));
+                this.heatAdaptation = bounded(values.heatAdaptation, 0, 1, randomFloat(0.2, 0.7));
+                this.seasonalMetabolism = bounded(values.seasonalMetabolism, 0.5, 1.5, randomFloat(0.8, 1.2));
+                // Phase 29: Niche specialization genes
+                this.burrowing = bounded(values.burrowing, 0, 1, randomFloat(0, 0.3));
+                this.climbing = bounded(values.climbing, 0, 1, randomFloat(0, 0.3));
+                this.nocturnal = bounded(values.nocturnal, 0, 1, randomFloat(0, 0.4));
+                this.waterDepthPreference = bounded(values.waterDepthPreference, 0, 1, randomFloat(0.3, 0.7));
+                this.surfaceFeeding = bounded(values.surfaceFeeding, 0, 1, randomFloat(0.3, 0.8));
+                this.deepWaterForaging = bounded(values.deepWaterForaging, 0, 1, randomFloat(0.1, 0.5));
+                this.neuralWeights = {};
         const inheritedWeights = values.neuralWeights || {};
         for (const name of NEURAL_WEIGHT_NAMES) {
             const value = Array.isArray(inheritedWeights)

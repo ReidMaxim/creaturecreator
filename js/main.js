@@ -76,8 +76,8 @@ const elements = {
     resourcePressureValue: document.getElementById('resourcePressureValue'),
     inspector: document.getElementById('inspector'),
     inspectorBody: document.getElementById('inspectorBody'),
-    closeInspector: document.getElementById('closeInspector')
-    ,save: document.getElementById('saveBtn'),
+    closeInspector: document.getElementById('closeInspector'),
+    save: document.getElementById('saveBtn'),
     load: document.getElementById('loadBtn'),
     export: document.getElementById('exportBtn'),
     import: document.getElementById('importBtn'),
@@ -85,15 +85,34 @@ const elements = {
     snapshotText: document.getElementById('snapshotText'),
     persistenceStatus: document.getElementById('persistenceStatus'),
     historyCanvas: document.getElementById('historyCanvas'),
-    evolutionTimeline: document.getElementById('evolutionTimeline')
-    ,reset: document.getElementById('resetBtn')
-    ,resetPause: document.getElementById('resetPause')
-    ,resetTime: document.getElementById('resetTime')
-    ,autoStart: document.getElementById('autoStart')
-    ,birthCount: document.getElementById('birthCount')
-    ,deathCount: document.getElementById('deathCount')
-    ,analyticsKillCount: document.getElementById('analyticsKillCount')
-    ,eventLog: document.getElementById('eventLog')
+    evolutionTimeline: document.getElementById('evolutionTimeline'),
+    reset: document.getElementById('resetBtn'),
+    resetPause: document.getElementById('resetPause'),
+    resetTime: document.getElementById('resetTime'),
+    autoStart: document.getElementById('autoStart'),
+    birthCount: document.getElementById('birthCount'),
+    deathCount: document.getElementById('deathCount'),
+    analyticsKillCount: document.getElementById('analyticsKillCount'),
+    eventLog: document.getElementById('eventLog'),
+    // Phase 29: Seasonal UI
+    seasonName: document.getElementById('seasonName'),
+    seasonTemp: document.getElementById('seasonTemp'),
+    timeOfDay: document.getElementById('timeOfDay'),
+    seasonProgressBar: document.getElementById('seasonProgressBar'),
+    // Phase 29: Disease UI
+    infectedCount: document.getElementById('infectedCount'),
+    avgPathogenLoad: document.getElementById('avgPathogenLoad'),
+    diseasePressure: document.getElementById('diseasePressure'),
+    diseaseParasite: document.getElementById('diseaseParasite'),
+    diseaseVirus: document.getElementById('diseaseVirus'),
+    diseaseFungus: document.getElementById('diseaseFungus'),
+    diseaseBacteria: document.getElementById('diseaseBacteria'),
+    // Phase 29: Niche UI
+    nicheBurrowing: document.getElementById('nicheBurrowing'),
+    nicheClimbing: document.getElementById('nicheClimbing'),
+    nicheNocturnal: document.getElementById('nicheNocturnal'),
+    nicheDeepWater: document.getElementById('nicheDeepWater'),
+    nicheSurface: document.getElementById('nicheSurface')
 };
 
 try {
@@ -304,6 +323,32 @@ function updateHud() {
     elements.camX.textContent = Math.round(renderer.camera.x);
     elements.camY.textContent = Math.round(renderer.camera.y);
     elements.zoom.textContent = `${renderer.getZoom().toFixed(1)}x`;
+
+    // Phase 29: Seasonal display
+    const seasonal = world.getSeasonalEffects();
+    elements.seasonName.textContent = seasonal.name.charAt(0).toUpperCase() + seasonal.name.slice(1);
+    elements.seasonTemp.textContent = `${Math.round(seasonal.temperature)}°C`;
+    elements.timeOfDay.textContent = world.isNight ? 'Night' : 'Day';
+    const seasonProgress = world.seasonTime / world.SEASONS[world.seasonIndex].duration;
+    elements.seasonProgressBar.style.width = `${Math.min(100, seasonProgress * 100)}%`;
+    elements.seasonProgressBar.style.background = seasonal.color;
+
+    // Phase 29: Disease HUD
+    elements.infectedCount.textContent = stats.infectedCount || 0;
+    elements.avgPathogenLoad.textContent = (stats.avgPathogenLoad || 0).toFixed(2);
+    elements.diseasePressure.textContent = `${((stats.diseasePressure || 0) * 100).toFixed(0)}%`;
+    elements.diseaseParasite.textContent = stats.diseaseBreakdown?.parasite || 0;
+    elements.diseaseVirus.textContent = stats.diseaseBreakdown?.virus || 0;
+    elements.diseaseFungus.textContent = stats.diseaseBreakdown?.fungus || 0;
+    elements.diseaseBacteria.textContent = stats.diseaseBreakdown?.bacteria || 0;
+
+    // Phase 29: Niche distribution
+    elements.nicheBurrowing.textContent = stats.nicheBreakdown?.burrowing || 0;
+    elements.nicheClimbing.textContent = stats.nicheBreakdown?.climbing || 0;
+    elements.nicheNocturnal.textContent = stats.nicheBreakdown?.nocturnal || 0;
+    elements.nicheDeepWater.textContent = stats.nicheBreakdown?.deepWater || 0;
+    elements.nicheSurface.textContent = stats.nicheBreakdown?.surface || 0;
+
     if (stats.event) {
         elements.eventStatus.classList.remove('hidden');
         elements.eventStatus.style.setProperty('--event-color', stats.event.color);

@@ -9,6 +9,16 @@ import { Plant } from './entities/plant.js';
 import { createZones, zoneAt, ZONE_DEFINITIONS } from './utils/zones.js';
 import { compareGenomeGenes, lineageColor, phenotypeSnapshot } from './genetics/phenotype.js';
 
+// Phase 29: Seasonal cycle definitions
+export const SEASONS = [
+    { name: 'spring', temperature: 0.4, plantGrowth: 1.4, foodSpawn: 1.2, duration: 60, color: '#86efac' },
+    { name: 'summer', temperature: 0.7, plantGrowth: 1.1, foodSpawn: 1.0, duration: 80, color: '#fde047' },
+    { name: 'autumn', temperature: 0.45, plantGrowth: 0.8, foodSpawn: 0.9, duration: 60, color: '#fb923c' },
+    { name: 'winter', temperature: 0.2, plantGrowth: 0.4, foodSpawn: 0.6, duration: 70, color: '#bfdbfe' }
+];
+
+const SEASON_DURATION = SEASONS.reduce((sum, s) => sum + s.duration, 0); // 270 seconds per year
+
 export const SIMULATION_PRESETS = {
     balanced: {
         foodSpawnRate: 2.0, foodEnergy: 50, maxFood: 500,
@@ -57,6 +67,18 @@ export class World {
         this.tick = 0;
         this.deltaTime = 0;
 
+        // Phase 29: Seasonal cycle
+        this.seasonIndex = 0;
+        this.seasonTime = 0;
+        this.seasonTransitionTime = 0;
+
+        // Phase 29: Disease system
+        this.diseasePressureGrid = null;
+        this.diseaseGridCellSize = 300;
+        this.diseaseGridColumns = Math.max(1, Math.ceil(width / this.diseaseGridCellSize));
+        this.diseaseGridRows = Math.max(1, Math.ceil(height / this.diseaseGridCellSize));
+        this.initDiseasePressureGrid();
+
         // Spawning accumulator
         this.foodSpawnAccumulator = 0;
         this.plantSeedAccumulator = 0;
@@ -76,87 +98,166 @@ export class World {
         this.evolutionHistory = [];
     }
 
-    applyPreset(name) {
-        const preset = PRESET_NAMES.includes(name) ? name : 'sandbox';
-        this.settings = {
-            ...this.settings,
-            ...SIMULATION_PRESETS[preset],
-            preset
-        };
-        return this.settings;
+    // Phase 29: Initialize disease pressure grid
+    initDiseasePressureGrid() {
+        this.diseasePressureGrid = [];
+        for (let y = 0; y < this.diseaseGridRows; y++) {
+            const row = [];
+            for (let x = 0; x < this.diseaseGridColumns; x++) {
+                row.push(0);
+            }
+            this.diseasePressureGrid.push(row);
+        }
     }
 
-    /**
-     * Update world state for one frame
-     */
-    update(deltaTime, simulationSpeed = 1) {
-        this.deltaTime = deltaTime * simulationSpeed;
-        this.time += this.deltaTime;
-        this.updateEnvironmentalEvent();
-        this.rebuildSpatialGrid();
+    // Phase 29: Get current season
+    getSeason() {
+        return SEASONS[this.seasonIndex];
+    }
 
-        // Spawn new food
-        this.updateFoodSpawning();
-        this.updatePlants();
+    // Phase 29: Check if currently night (based on season and time)
+    get isNight() {
+        const season = this.getSeason();
+        // Night is longer in winter, shorter in summer
+        const nightLength = 0.3 + (1 - season.temperature) * 0.3; // 0.3 to 0.5
+        const dayCycle = (this.time % 60) / 60; // 60 second day cycle
+        return dayCycle > (1 - nightLength);
+    }
 
-        // Update creatures (will be implemented in creature class)
-        for (const creature of [...this.creatures]) {
-            if (creature.update) {
-                creature.update(deltaTime * simulationSpeed, this);
+    // Phase 29: Update seasonal cycle
+    updateSeasonalCycle() {
+        this.seasonTime += this.deltaTime;
+        const currentSeason = SEASONS[this.seasonIndex];
+
+        if (this.seasonTime >= currentSeason.duration) {
+            this.seasonTime = 0;
+            this.seasonIndex = (this.seasonIndex + 1) % SEASONS.length;
+            this.seasonTransitionTime = this.time;
+            this.recordEvent(`Season changed to ${SEASONS[this.seasonIndex].name}`, SEASONS[this.seasonIndex].color);
+        }
+    }
+
+    // Phase 29: Get seasonal environment effects
+    getSeasonalEffects() {
+        const season = this.getSeason();
+        const progress = this.seasonTime / season.duration;
+
+        return {
+            plantGrowth: season.plantGrowth,
+            foodSpawn: season.foodSpawn,
+            temperature: season.temperature,
+            seasonName: season.name,
+            seasonProgress: progress,
+            seasonColor: season.color,
+            isNight: this.isNight
+        };
+    }
+
+    // Phase 29: Get disease pressure at position
+    getDiseasePressure(x, y) {
+        const wrappedX = ((x % this.width) + this.width) % this.width;
+        const wrappedY = ((y % this.height) + this.height) % this.height;
+        const col = Math.min(this.diseaseGridColumns - 1, Math.floor(wrappedX / this.diseaseGridCellSize));
+        const row = Math.min(this.diseaseGridRows - 1, Math.floor(wrappedY / this.diseaseGridCellSize));
+        return this.diseasePressureGrid[row][col];
+    }
+
+    // Phase 29: Add disease pressure at position (from diseased creatures)
+    addDiseasePressure(x, y, amount) {
+        const wrappedX = ((x % this.width) + this.width) % this.width;
+        const wrappedY = ((y % this.height) + this.height) % this.height;
+        const col = Math.min(this.diseaseGridColumns - 1, Math.floor(wrappedX / this.diseaseGridCellSize));
+        const row = Math.min(this.diseaseGridRows - 1, Math.floor(wrappedY / this.diseaseGridCellSize));
+        this.diseasePressureGrid[row][col] = Math.min(1, this.diseasePressureGrid[row][col] + amount);
+    }
+
+    // Phase 29: Decay disease pressure grid
+    decayDiseasePressure() {
+        for (let y = 0; y < this.diseaseGridRows; y++) {
+            for (let x = 0; x < this.diseaseGridColumns; x++) {
+                this.diseasePressureGrid[y][x] = Math.max(0, this.diseasePressureGrid[y][x] - this.deltaTime * 0.02);
+            }
+        }
+    }
+
+        // Phase 29: Update seasonal cycle and disease pressure
+                this.updateSeasonalCycle();
+                this.decayDiseasePressure();
+
+                // Add disease pressure from diseased creatures
+                for (const creature of this.creatures) {
+                    if (creature.diseases && creature.diseases.length > 0) {
+                        this.addDiseasePressure(creature.x, creature.y, 0.01 * creature.diseases.length);
+                    }
+                }
+
+                // Update creatures (will be implemented in creature class)
+                for (const creature of [...this.creatures]) {
+                    if (creature.update) {
+                        creature.update(deltaTime * simulationSpeed, this);
+                    }
+                }
+
+                // Remove dead creatures
+                const living = [];
+                for (const creature of this.creatures) {
+                    if (creature.alive !== false) living.push(creature);
+                    else this.deaths += 1;
+                }
+                this.creatures = living;
+                this.plants = this.plants.filter(plant => plant.alive);
+                for (const child of this.pendingBirths.splice(0)) {
+                    const creature = new Creature(child.x, child.y, child);
+                    this.addCreature(creature);
+                    this.recordEvolution(creature);
+                    this.births += 1;
+                }
+                for (const seed of this.pendingPlantSeeds.splice(0)) this.addPlant(seed);
+
+                // Rebuild spatial grid for proximity queries
+                this.rebuildSpatialGrid();
+
+                this.tick++;
+            }
+
+    updatePlants() {
+            // Phase 29: Apply seasonal effects to plant spawning
+            const seasonalEffects = this.getSeasonalEffects();
+            const envEffects = this.getEnvironmentEffects();
+            const plantSpawnMultiplier = seasonalEffects.plantGrowth * envEffects.plantSpawn;
+
+            this.plantSeedAccumulator += this.settings.plantSpawnRate
+                * plantSpawnMultiplier * this.deltaTime;
+            while (this.plantSeedAccumulator >= 1 && this.plants.length < this.settings.maxPlants) {
+                this.spawnPlant();
+                this.plantSeedAccumulator -= 1;
+            }
+            for (const plant of [...this.plants]) {
+                if (plant.alive) plant.update(this.deltaTime, this);
             }
         }
 
-        // Remove dead creatures
-        const living = [];
-        for (const creature of this.creatures) {
-            if (creature.alive !== false) living.push(creature);
-            else this.deaths += 1;
-        }
-        this.creatures = living;
-        this.plants = this.plants.filter(plant => plant.alive);
-        for (const child of this.pendingBirths.splice(0)) {
-            const creature = new Creature(child.x, child.y, child);
-            this.addCreature(creature);
-            this.recordEvolution(creature);
-            this.births += 1;
-        }
-        for (const seed of this.pendingPlantSeeds.splice(0)) this.addPlant(seed);
+        /**
+         * Handle food spawning logic
+         */
+        updateFoodSpawning() {
+            if (this.food.length >= this.settings.maxFood) {
+                return;
+            }
 
-        // Rebuild spatial grid for proximity queries
-        this.rebuildSpatialGrid();
+            // Phase 29: Apply seasonal effects to food spawning
+            const seasonalEffects = this.getSeasonalEffects();
+            const envEffects = this.getEnvironmentEffects();
+            const foodSpawnMultiplier = seasonalEffects.foodSpawn * envEffects.foodSpawn;
 
-        this.tick++;
-    }
+            this.foodSpawnAccumulator += this.settings.foodSpawnRate
+                * foodSpawnMultiplier * this.deltaTime;
 
-    updatePlants() {
-        const effects = this.getEnvironmentEffects();
-        this.plantSeedAccumulator += this.settings.plantSpawnRate
-            * effects.plantSpawn * this.deltaTime;
-        while (this.plantSeedAccumulator >= 1 && this.plants.length < this.settings.maxPlants) {
-            this.spawnPlant();
-            this.plantSeedAccumulator -= 1;
+            while (this.foodSpawnAccumulator >= 1.0) {
+                this.spawnFood();
+                this.foodSpawnAccumulator -= 1.0;
+            }
         }
-        for (const plant of [...this.plants]) {
-            if (plant.alive) plant.update(this.deltaTime, this);
-        }
-    }
-
-    /**
-     * Handle food spawning logic
-     */
-    updateFoodSpawning() {
-        if (this.food.length >= this.settings.maxFood) {
-            return;
-        }
-
-        this.foodSpawnAccumulator += this.settings.foodSpawnRate
-            * this.getEnvironmentEffects().foodSpawn * this.deltaTime;
-
-        while (this.foodSpawnAccumulator >= 1.0) {
-            this.spawnFood();
-            this.foodSpawnAccumulator -= 1.0;
-        }
-    }
 
     /**
      * Spawn food at random location
@@ -389,44 +490,89 @@ export class World {
         for (const creature of this.creatures) zoneCounts[this.getZoneAt(creature.x, creature.y).type] += 1;
         const species = new Set();
         const lineages = new Set();
-        for (const creature of this.creatures) {
-            species.add(this.getSpeciesKey(creature));
-            lineages.add(creature.lineageId || creature.id);
+            let infectedCount = 0;
+            let totalPathogenLoad = 0;
+            let totalDiseasePressure = 0;
+            const diseaseBreakdown = { parasite: 0, virus: 0, fungus: 0, bacteria: 0 };
+            const nicheBreakdown = { burrowing: 0, climbing: 0, nocturnal: 0, deepWater: 0, surface: 0 };
+
+            for (const creature of this.creatures) {
+                species.add(this.getSpeciesKey(creature));
+                lineages.add(creature.lineageId || creature.id);
+
+                // Disease stats
+                if (creature.diseases && creature.diseases.length > 0) {
+                    infectedCount++;
+                    totalPathogenLoad += creature.pathogenLoad || 0;
+                    for (const disease of creature.diseases) {
+                        if (diseaseBreakdown[disease.type] !== undefined) {
+                            diseaseBreakdown[disease.type]++;
+                        }
+                    }
+                }
+
+                // Niche stats
+                if (creature.phenotype) {
+                    if (creature.phenotype.burrowing > 0.5) nicheBreakdown.burrowing++;
+                    if (creature.phenotype.climbing > 0.5) nicheBreakdown.climbing++;
+                    if (creature.phenotype.nocturnal > 0.5) nicheBreakdown.nocturnal++;
+                    if (creature.phenotype.waterDepthPreference > 0.5) nicheBreakdown.deepWater++;
+                    if (creature.phenotype.surfaceFeeding > 0.5) nicheBreakdown.surface++;
+                }
+            }
+
+            // Average disease pressure across grid
+            let gridPressureSum = 0;
+            let gridCells = 0;
+            for (const row of this.diseasePressureGrid) {
+                for (const cell of row) {
+                    gridPressureSum += cell;
+                    gridCells++;
+                }
+            }
+            totalDiseasePressure = gridCells > 0 ? gridPressureSum / gridCells : 0;
+
+            const predators = this.creatures.filter(creature => creature.isPredator).length;
+            const herbivores = this.creatures.length - predators;
+            const creatureLoad = this.settings.maxCreatures
+                ? this.creatures.length / this.settings.maxCreatures : 0;
+            const foodScarcity = this.settings.maxFood
+                ? 1 - this.food.length / this.settings.maxFood : 1;
+            const plantScarcity = this.settings.maxPlants
+                ? 1 - this.plants.length / this.settings.maxPlants : 1;
+            const resourcePressure = Math.max(0, Math.min(100,
+                (creatureLoad * 0.45 + ((foodScarcity + plantScarcity) / 2) * 0.55)
+                * (this.settings.resourcePressure || 1) * 100));
+            return {
+                creatures: this.creatures.length,
+                food: this.food.length,
+                plants: this.plants.length,
+                plantEnergy: this.plants.reduce((sum, plant) => sum + plant.energy, 0),
+                time: this.time,
+                tick: this.tick,
+                generation: this.maxGeneration,
+                births: this.births,
+                deaths: this.deaths,
+                averageFitness: this.creatures.length ? fitnessTotal / this.creatures.length : 0,
+                predators,
+                herbivores,
+                predatorRatio: this.creatures.length ? predators / this.creatures.length : 0,
+                populationRatio: `${predators}:${herbivores}`,
+                resourcePressure,
+                predationKills: this.predationKills,
+                zoneCounts,
+                species: species.size,
+                lineages: lineages.size,
+                event: this.event,
+                // Phase 29: Disease stats
+                infectedCount,
+                avgPathogenLoad: this.creatures.length ? totalPathogenLoad / this.creatures.length : 0,
+                diseasePressure: totalDiseasePressure,
+                diseaseBreakdown,
+                // Phase 29: Niche stats
+                nicheBreakdown
+            };
         }
-        const predators = this.creatures.filter(creature => creature.isPredator).length;
-        const herbivores = this.creatures.length - predators;
-        const creatureLoad = this.settings.maxCreatures
-            ? this.creatures.length / this.settings.maxCreatures : 0;
-        const foodScarcity = this.settings.maxFood
-            ? 1 - this.food.length / this.settings.maxFood : 1;
-        const plantScarcity = this.settings.maxPlants
-            ? 1 - this.plants.length / this.settings.maxPlants : 1;
-        const resourcePressure = Math.max(0, Math.min(100,
-            (creatureLoad * 0.45 + ((foodScarcity + plantScarcity) / 2) * 0.55)
-            * (this.settings.resourcePressure || 1) * 100));
-        return {
-            creatures: this.creatures.length,
-            food: this.food.length,
-            plants: this.plants.length,
-            plantEnergy: this.plants.reduce((sum, plant) => sum + plant.energy, 0),
-            time: this.time,
-            tick: this.tick,
-            generation: this.maxGeneration,
-            births: this.births,
-            deaths: this.deaths,
-            averageFitness: this.creatures.length ? fitnessTotal / this.creatures.length : 0,
-            predators,
-            herbivores,
-            predatorRatio: this.creatures.length ? predators / this.creatures.length : 0,
-            populationRatio: `${predators}:${herbivores}`,
-            resourcePressure,
-            predationKills: this.predationKills,
-            zoneCounts,
-            species: species.size,
-            lineages: lineages.size,
-            event: this.event
-        };
-    }
 
     getSpeciesKey(creature) {
         const genome = creature.genome;
@@ -467,30 +613,39 @@ export class World {
                 mutations: Array.isArray(entry.mutations)
                     ? entry.mutations.map(change => ({ ...change })) : []
             })),
-            creatures: this.creatures.map(creature => ({
-                id: creature.id, x: creature.x, y: creature.y,
-                genome: { ...creature.genome, neuralWeights: { ...creature.genome.neuralWeights } },
-                energy: creature.energy, age: creature.age, generation: creature.generation,
-                parentId: creature.parentId, lineageId: creature.lineageId,
-                parentGenome: creature.parentGenome
-                    ? { ...creature.parentGenome, neuralWeights: { ...creature.parentGenome.neuralWeights } } : null,
-                parentPhenotype: creature.parentPhenotype ? { ...creature.parentPhenotype } : null,
-                rotation: creature.rotation, alive: creature.alive,
-                attackCooldown: creature.attackCooldown,
-                reproductionCooldown: creature.reproductionCooldown,
-                deathCause: creature.deathCause || null,
-                behaviorStats: { ...creature.behaviorStats }
-            })),
-            plants: this.plants.map(plant => ({
-                id: plant.id, x: plant.x, y: plant.y, age: plant.age,
-                energy: plant.energy, maxEnergy: plant.maxEnergy,
-                growthRate: plant.growthRate, lifespan: plant.lifespan,
-                seedTimer: plant.seedTimer, seedInterval: plant.seedInterval,
-                alive: plant.alive, zoneType: plant.zoneType
-            })),
-            food: this.food.map(food => ({ x: food.x, y: food.y, energy: food.energy, id: food.id }))
-        };
-    }
+                // Phase 29: Seasonal cycle state
+                seasonIndex: this.seasonIndex,
+                seasonTime: this.seasonTime,
+                // Phase 29: Disease pressure grid
+                diseasePressureGrid: this.diseasePressureGrid.map(row => [...row]),
+                creatures: this.creatures.map(creature => ({
+                    id: creature.id, x: creature.x, y: creature.y,
+                    genome: { ...creature.genome, neuralWeights: { ...creature.genome.neuralWeights } },
+                    energy: creature.energy, age: creature.age, generation: creature.generation,
+                    parentId: creature.parentId, lineageId: creature.lineageId,
+                    parentGenome: creature.parentGenome
+                        ? { ...creature.parentGenome, neuralWeights: { ...creature.parentGenome.neuralWeights } } : null,
+                    parentPhenotype: creature.parentPhenotype ? { ...creature.parentPhenotype } : null,
+                    rotation: creature.rotation, alive: creature.alive,
+                    attackCooldown: creature.attackCooldown,
+                    reproductionCooldown: creature.reproductionCooldown,
+                    deathCause: creature.deathCause || null,
+                    behaviorStats: { ...creature.behaviorStats },
+                    // Phase 29: Disease state
+                    diseases: creature.diseases ? [...creature.diseases] : [],
+                    pathogenLoad: creature.pathogenLoad || 0,
+                    diseaseImmunity: creature.diseaseImmunity ? { ...creature.diseaseImmunity } : {}
+                })),
+                plants: this.plants.map(plant => ({
+                    id: plant.id, x: plant.x, y: plant.y, age: plant.age,
+                    energy: plant.energy, maxEnergy: plant.maxEnergy,
+                    growthRate: plant.growthRate, lifespan: plant.lifespan,
+                    seedTimer: plant.seedTimer, seedInterval: plant.seedInterval,
+                    alive: plant.alive, zoneType: plant.zoneType
+                })),
+                food: this.food.map(food => ({ x: food.x, y: food.y, energy: food.energy, id: food.id }))
+            };
+        }
 
     /**
      * Restore a validated snapshot in place so renderer references remain valid.
@@ -570,16 +725,20 @@ export class World {
                 id: data.id, genome: data.genome, energy: finite(data.energy),
                 age: finite(data.age), generation: finite(data.generation),
                 parentId: data.parentId, lineageId: data.lineageId,
-                parentGenome: data.parentGenome, parentPhenotype: data.parentPhenotype
-            });
-            creature.rotation = finite(data.rotation);
-            creature.alive = data.alive !== false;
-            creature.attackCooldown = Math.max(0, finite(data.attackCooldown));
-            creature.reproductionCooldown = Math.max(0, finite(data.reproductionCooldown));
-            creature.deathCause = data.deathCause || null;
-            creature.behaviorStats = { ...creature.behaviorStats, ...(data.behaviorStats || {}) };
-            return creature;
-        });
+                        parentGenome: data.parentGenome, parentPhenotype: data.parentPhenotype,
+                        // Phase 29: Disease state
+                        diseases: Array.isArray(data.diseases) ? data.diseases.map(d => ({...d})) : [],
+                        pathogenLoad: finite(data.pathogenLoad, 0),
+                        diseaseImmunity: data.diseaseImmunity && typeof data.diseaseImmunity === 'object' ? {...data.diseaseImmunity} : {}
+                    });
+                    creature.rotation = finite(data.rotation);
+                    creature.alive = data.alive !== false;
+                    creature.attackCooldown = Math.max(0, finite(data.attackCooldown));
+                    creature.reproductionCooldown = Math.max(0, finite(data.reproductionCooldown));
+                    creature.deathCause = data.deathCause || null;
+                    creature.behaviorStats = { ...creature.behaviorStats, ...(data.behaviorStats || {}) };
+                    return creature;
+                });
         this.plants = snapshot.plants.map(data => {
             if (!data || !Number.isFinite(Number(data.x)) || !Number.isFinite(Number(data.y))) {
                 throw new Error('Invalid plant in snapshot.');
@@ -621,5 +780,11 @@ export class World {
         this.eventHistory = [];
         this.analyticsLog = [];
         this.spatialGrid.clear();
+            // Phase 29: Reset seasonal cycle
+            this.seasonIndex = 0;
+            this.seasonTime = 0;
+            this.seasonTransitionTime = 0;
+            // Phase 29: Reset disease pressure grid
+            this.initDiseasePressureGrid();
+        }
     }
-}

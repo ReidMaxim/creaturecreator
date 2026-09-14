@@ -65,6 +65,7 @@ python -m http.server 8000
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
 | 27 | Bounded heritable phenotypes, body plans, and evolved rendering | ✅ Complete |
 | 28 | Visual evolution history, parent/offspring comparisons, and mutation highlights | ✅ Complete |
+| 29 | Disease/parasites, seasonal cycles, niche specialization | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -161,6 +162,38 @@ turning and thrust; reproduction copies the vector and applies independent
 Gaussian mutations. The HUD shows population average fitness, while the
 inspector reports a creature's policy, food collected, travel, and fitness.
 
+### Phase 29: Advanced ecosystem features — disease, seasons, and niche specialization
+
+Three interconnected systems deepen the living world:
+
+- **Disease & parasites:** Four transmissible pathogen types (parasite, virus,
+  fungus, bacteria) with distinct severity profiles. Immunity, disease
+  resistance, and pathogen tolerance are bounded heritable genes.
+  Environmental exposure and proximity-based transmission spread infection.
+  Symptoms drain energy, reduce movement, and raise reproduction thresholds.
+  A spatial disease-pressure grid decays over time and is seeded by sick
+  creatures. Visual indicators include colored ring segments per disease,
+  particle effects for severe cases, and a HUD panel with infected counts,
+  average pathogen load, and per-pathogen breakdown.
+
+- **Seasonal cycles:** Four seasons (spring 60s, summer 80s, autumn 60s,
+  winter 70s = 270s/year) with temperature, plant growth, and food spawn
+  multipliers. Temperature stress interacts with cold/heat adaptation genes.
+  A 60s day/night cycle has season-dependent night length; nocturnal
+  creatures gain night bonuses and day penalties. Zone colors blend with
+  seasonal tints and a night overlay renders visible time-of-day.
+
+- **Niche specialization:** Six bounded traits (burrowing, climbing, nocturnal,
+  water-depth preference, surface feeding, deep-water foraging) modify movement
+  costs, sensing, and resource access in specific zones. Creatures are
+  classified into niche types (burrower, climber, nocturnal, deep_water,
+  surface, generalist) with corresponding visual symbols and a niche
+  distribution HUD panel.
+
+All existing systems (genetics, reproduction, phenotypes, visual evolution,
+saves, analytics, presets, GitHub Pages compatibility) are preserved. See
+[`docs/PHASE29.md`](./docs/PHASE29.md).
+
 ---
 
 ## Project Structure
@@ -214,7 +247,8 @@ creaturecreator/
 │   ├── PHASE20.md            # Experiment controls and live analytics notes
 │   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
 │   ├── PHASE27.md            # Heritable phenotypes and body-plan rendering
-│   └── PHASE28.md            # Visual evolution history and comparisons
+│   ├── PHASE28.md            # Visual evolution history and comparisons
+│   └── PHASE29.md            # Advanced ecosystem features notes
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -285,6 +319,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 28 (Visual evolution history)
+**Current Phase:** 29 (Advanced ecosystem features — disease, seasons, niche specialization)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

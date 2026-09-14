@@ -88,17 +88,49 @@ export class Renderer {
         const startY = Math.floor((this.camera.y - this.height / this.camera.zoom) / cell) * cell;
         const endX = this.camera.x + this.width / this.camera.zoom;
         const endY = this.camera.y + this.height / this.camera.zoom;
-        for (let x = startX; x <= endX; x += cell) {
-            for (let y = startY; y <= endY; y += cell) {
-                const zone = world.getZoneAt(x + cell / 2, y + cell / 2);
-                const topLeft = this.worldToScreen(x, y);
-                this.ctx.fillStyle = zone.color;
-                this.ctx.globalAlpha = 0.42;
-                this.ctx.fillRect(topLeft.x, topLeft.y, cell * this.camera.zoom + 1, cell * this.camera.zoom + 1);
+
+            // Phase 29: Seasonal background tint
+            const seasonalEffects = world.getSeasonalEffects ? world.getSeasonalEffects() : { seasonColor: '#1a1f3a', isNight: false };
+            const seasonTint = seasonalEffects.seasonColor || '#1a1f3a';
+
+            for (let x = startX; x <= endX; x += cell) {
+                for (let y = startY; y <= endY; y += cell) {
+                    const zone = world.getZoneAt(x + cell / 2, y + cell / 2);
+                    const topLeft = this.worldToScreen(x, y);
+                    // Blend zone color with seasonal tint
+                    this.ctx.fillStyle = this.blendColors(zone.color, seasonTint, 0.15);
+                    this.ctx.globalAlpha = 0.42;
+                    this.ctx.fillRect(topLeft.x, topLeft.y, cell * this.camera.zoom + 1, cell * this.camera.zoom + 1);
+                }
+            }
+            this.ctx.globalAlpha = 1;
+
+            // Phase 29: Night overlay
+            if (seasonalEffects.isNight) {
+                this.ctx.fillStyle = 'rgba(10, 15, 35, 0.25)';
+                this.ctx.fillRect(0, 0, this.width, this.height);
             }
         }
-        this.ctx.globalAlpha = 1;
-    }
+
+        // Helper: Blend two hex colors
+        blendColors(color1, color2, ratio) {
+            const c1 = this.hexToRgb(color1);
+            const c2 = this.hexToRgb(color2);
+            if (!c1 || !c2) return color1;
+            const r = Math.round(c1.r * (1 - ratio) + c2.r * ratio);
+            const g = Math.round(c1.g * (1 - ratio) + c2.g * ratio);
+            const b = Math.round(c1.b * (1 - ratio) + c2.b * ratio);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
 
     /**
      * Draw world grid (for debugging)
@@ -312,23 +344,142 @@ export class Renderer {
             this.ctx.setLineDash([]);
         }
 
-        // Energy indicator (ring)
-        const energyPercent = creature.energy / (creature.maxEnergy || 100);
-        this.ctx.strokeStyle = energyPercent > 0.5 ? '#22c55e' : energyPercent > 0.25 ? '#eab308' : '#ef4444';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, Math.max(length, width) + 4, 0, Math.PI * 2 * energyPercent);
-        this.ctx.stroke();
+                // Phase 29: Disease visual indicators
+                if (creature.diseases && creature.diseases.length > 0) {
+                    this.drawDiseaseIndicators(creature, size, length, width);
+                }
 
-        this.ctx.restore();
-        if (creature === this.selectedCreature) {
-            this.ctx.strokeStyle = '#facc15';
-            this.ctx.lineWidth = 2;
-            this.ctx.beginPath();
-            this.ctx.arc(screen.x, screen.y, size + 8, 0, Math.PI * 2);
-            this.ctx.stroke();
-        }
-    }
+                // Phase 29: Niche specialization visual indicators
+                this.drawNicheIndicators(creature, phenotype, size, length, width);
+
+                // Energy indicator (ring)
+                const energyPercent = creature.energy / (creature.maxEnergy || 100);
+                this.ctx.strokeStyle = energyPercent > 0.5 ? '#22c55e' : energyPercent > 0.25 ? '#eab308' : '#ef4444';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, Math.max(length, width) + 4, 0, Math.PI * 2 * energyPercent);
+                this.ctx.stroke();
+
+                this.ctx.restore();
+                if (creature === this.selectedCreature) {
+                    this.ctx.strokeStyle = '#facc15';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.arc(screen.x, screen.y, size + 8, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+            }
+
+            // Phase 29: Draw disease indicators on creature
+            drawDiseaseIndicators(creature, size, length, width) {
+                const maxRadius = Math.max(length, width);
+                for (let i = 0; i < creature.diseases.length; i++) {
+                    const disease = creature.diseases[i];
+                    const angle = (i * Math.PI * 2 / creature.diseases.length) - Math.PI / 2;
+                    const indicatorRadius = maxRadius + 8 + i * 4;
+
+                    // Disease ring segment
+                    this.ctx.strokeStyle = disease.color;
+                    this.ctx.lineWidth = Math.max(1.5, size * 0.08);
+                    this.ctx.globalAlpha = 0.6 + disease.severity * 0.3;
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, indicatorRadius, angle - 0.4, angle + 0.4);
+                    this.ctx.stroke();
+                    this.ctx.globalAlpha = 1;
+
+                    // Disease particle effect (small dots)
+                    if (disease.severity > 0.5) {
+                        this.ctx.fillStyle = disease.color;
+                        for (let p = 0; p < 3; p++) {
+                            const particleAngle = angle + (Math.random() - 0.5) * 0.6;
+                            const particleDist = indicatorRadius + Math.random() * 6;
+                            const px = Math.cos(particleAngle) * particleDist;
+                            const py = Math.sin(particleAngle) * particleDist;
+                            this.ctx.beginPath();
+                            this.ctx.arc(px, py, Math.max(1, size * 0.04), 0, Math.PI * 2);
+                            this.ctx.fill();
+                        }
+                    }
+                }
+
+                // Overall disease glow if heavily infected
+                const totalSeverity = creature.diseases.reduce((sum, d) => sum + d.severity, 0);
+                if (totalSeverity > 1.2) {
+                    this.ctx.strokeStyle = '#ef4444';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.globalAlpha = 0.3;
+                    this.ctx.setLineDash([4, 4]);
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, maxRadius + 12, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                    this.ctx.globalAlpha = 1;
+                }
+            }
+
+            // Phase 29: Draw niche specialization indicators
+            drawNicheIndicators(creature, phenotype, size, length, width) {
+                const maxRadius = Math.max(length, width);
+                const indicators = [];
+
+                // Burrowing indicator
+                if (phenotype.burrowing > 0.4) {
+                    indicators.push({
+                        symbol: '▼',
+                        color: '#8b7355',
+                        offset: { x: -length * 0.7, y: -width * 0.7 },
+                        size: phenotype.burrowing
+                    });
+                }
+
+                // Climbing indicator
+                if (phenotype.climbing > 0.4) {
+                    indicators.push({
+                        symbol: '▲',
+                        color: '#6b7280',
+                        offset: { x: length * 0.7, y: -width * 0.7 },
+                        size: phenotype.climbing
+                    });
+                }
+
+                // Nocturnal indicator
+                if (phenotype.nocturnal > 0.5) {
+                    indicators.push({
+                        symbol: '☾',
+                        color: '#6366f1',
+                        offset: { x: 0, y: -width * 0.9 },
+                        size: phenotype.nocturnal
+                    });
+                }
+
+                // Water depth preference
+                if (phenotype.waterDepthPreference > 0.6 && phenotype.deepWaterForaging > 0.4) {
+                    indicators.push({
+                        symbol: '▼',
+                        color: '#1e40af',
+                        offset: { x: -length * 0.5, y: width * 0.8 },
+                        size: phenotype.deepWaterForaging
+                    });
+                } else if (phenotype.waterDepthPreference < 0.4 && phenotype.surfaceFeeding > 0.5) {
+                    indicators.push({
+                        symbol: '△',
+                        color: '#06b6d4',
+                        offset: { x: length * 0.5, y: width * 0.8 },
+                        size: phenotype.surfaceFeeding
+                    });
+                }
+
+                // Draw indicators
+                for (const indicator of indicators) {
+                    this.ctx.fillStyle = indicator.color;
+                    this.ctx.font = `${Math.max(8, size * 0.15 * indicator.size)}px Arial`;
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.globalAlpha = 0.8 * indicator.size;
+                    this.ctx.fillText(indicator.symbol, indicator.offset.x, indicator.offset.y);
+                    this.ctx.globalAlpha = 1;
+                }
+            }
 
     /**
      * Draw all entities in world
