@@ -137,6 +137,28 @@
                 <div id="eventLog" class="event-log" role="log" aria-live="polite"></div>
             </div>
 
+            <div id="evolutionPanel" class="panel evolution-panel">
+                <div class="panel-heading">Evolution observatory</div>
+                <div class="analytics-controls">
+                    <label for="trendMetric">Trend</label>
+                    <select id="trendMetric" class="select">
+                        <option value="averageFitness">Fitness</option>
+                        <option value="generation">Generation</option>
+                        <option value="size">Size</option>
+                        <option value="speed">Speed</option>
+                        <option value="diet">Diet</option>
+                        <option value="plantPreference">Plant preference</option>
+                    </select>
+                    <button id="refreshAnalytics" class="btn">Refresh</button>
+                </div>
+                <canvas id="trendCanvas" width="260" height="80"></canvas>
+                <div id="evolutionSummary" class="evolution-summary"></div>
+                <div class="analytics-subheading">Lineage tree · largest roots</div>
+                <div id="lineageTree" class="lineage-tree"></div>
+                <div class="analytics-subheading">Fitness breakdown</div>
+                <div id="fitnessBreakdown" class="fitness-breakdown"></div>
+            </div>
+
             <!-- Bottom Left: Camera Info -->
             <div id="cameraInfo" class="panel bottom-left">
                 <div class="stat-row">

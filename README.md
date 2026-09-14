@@ -63,6 +63,7 @@ python -m http.server 8000
 | 19 | Persistence, JSON import/export, and population history | ✅ Complete |
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
+| 24 | Evolution observability: clusters, lineages, trends, and fitness | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -113,6 +114,16 @@ selected preset is retained in preferences and serialized snapshots. The HUD
 reports resource pressure and the predator-to-herbivore population ratio so
 long-running outcomes are measurable. See [`docs/PHASE21.md`](./docs/PHASE21.md).
 
+### Phase 24: Evolution observability
+
+The Evolution observatory adds bounded species clustering, lineage summaries
+and parent trees, selectable trait and fitness trends, a generation timeline,
+and fitness-component breakdowns. The inspector now includes lineage and
+per-creature fitness contributions. Analytics are derived from live state and
+the existing history buffer; snapshot version 1 remains compatible and
+transient HUD analytics are not written to new saves. See
+[`docs/PHASE24.md`](./docs/PHASE24.md).
+
 ### Phase 16: Plants and growing ecosystems
 
 Plants grow renewable energy, regrow after grazing, age out, and spread
@@ -155,6 +166,7 @@ creaturecreator/
 │   ├── main.js               # Bootstrap & event loop
 │   ├── world.js              # World state, zones, events & physics
 │   ├── renderer.js           # Canvas rendering
+│   ├── analytics.js          # Bounded evolution summaries and trends
 │   │
 │   ├── entities/
 │   │   ├── creature.js       # Creature class
@@ -191,7 +203,8 @@ creaturecreator/
 │   ├── PHASE18.md            # Environmental events and diversity notes
 │   ├── PHASE19.md            # Persistence and population history notes
 │   ├── PHASE20.md            # Experiment controls and live analytics notes
-│   └── PHASE21.md            # Ecosystem balance controls and resource analytics
+│   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
+│   └── PHASE24.md            # Evolution observability
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -262,6 +275,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 20 (Experiment controls and live analytics)
+**Current Phase:** 24 (Evolution observability)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim
