@@ -22,18 +22,33 @@ export class DecisionBrain {
         const foodAngle = normalizeAngle(senses.foodDirection - creature.rotation);
         const urgency = 1 - clamp(senses.energy, 0, 1);
         const ageFactor = clamp(senses.age, 0, 1);
-        const riskDrive = 0.7 + this.genome.risk * (0.35 + urgency * 0.65);
-        const foodTurn = Math.sin(foodAngle) * foodSignal * this.genome.foodAttraction * riskDrive;
-        const wanderTurn = this.wanderDirection * this.genome.wander
-            * (1 + ageFactor * 0.25) * (1 - foodSignal * 0.75);
-        const turn = clamp(
-            foodTurn + wanderTurn + this.lastAction.turn * this.genome.persistence * 0.12,
-            -1,
-            1
+        const weights = this.genome.neuralWeights;
+        const inputs = {
+            foodDirection: Math.sin(foodAngle) * (senses.foodVisible ? 1 : 0)
+                * this.genome.foodAttraction,
+            foodDistance: foodSignal * this.genome.foodAttraction,
+            energyUrgency: urgency,
+            wander: this.wanderDirection * this.genome.wander
+                * (1 + ageFactor * 0.25) * (1 - foodSignal * 0.75),
+            persistence: this.lastAction.turn * this.genome.persistence,
+            risk: urgency * this.genome.risk,
+            bias: 1
+        };
+        // This compact linear policy is the creature's mutable neural circuit.
+        // Scalar genes still scale its sensory and motor hardware, while the
+        // inherited weights decide how those signals are combined.
+        const turnSignal = NEURAL_INPUTS.reduce(
+            (sum, name) => sum + inputs[name] * weights[name],
+            0
         );
+        const turn = clamp(Math.tanh(turnSignal), -1, 1);
+        const driveSignal = weights.foodDistance * foodSignal
+            + weights.energyUrgency * urgency
+            + weights.risk * urgency * this.genome.risk
+            + weights.bias;
         const thrust = clamp(
-            0.75 + this.genome.risk * 0.12 + foodSignal * 0.18
-                + urgency * this.genome.risk * 0.15 - ageFactor * 0.1,
+            0.78 + Math.tanh(driveSignal) * 0.25
+                + this.genome.risk * 0.08 - ageFactor * 0.1,
             0.35,
             1.2
         );
@@ -42,3 +57,13 @@ export class DecisionBrain {
         return this.lastAction;
     }
 }
+
+const NEURAL_INPUTS = [
+    'foodDirection',
+    'foodDistance',
+    'energyUrgency',
+    'wander',
+    'persistence',
+    'risk',
+    'bias'
+];

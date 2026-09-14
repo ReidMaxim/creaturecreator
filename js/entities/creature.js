@@ -26,6 +26,11 @@ export class Creature {
         this.isCreature = true;
         this.color = `hsl(${Math.round(this.genome.hue)} 75% 60%)`;
         this.reproductionCooldown = 0;
+        this.behaviorStats = {
+            foodEaten: 0,
+            distanceTravelled: 0,
+            decisions: 0
+        };
     }
 
     update(deltaTime, world) {
@@ -38,6 +43,7 @@ export class Creature {
         }
 
         const action = this.brain.decide(this, world, deltaTime);
+        this.behaviorStats.decisions += 1;
         this.rotation += action.turn * (1.8 + this.genome.persistence * 0.35) * deltaTime;
 
         const position = world.wrapPosition(
@@ -46,6 +52,7 @@ export class Creature {
         );
         this.x = position.x;
         this.y = position.y;
+        this.behaviorStats.distanceTravelled += this.speed * action.thrust * deltaTime;
 
         for (let index = world.food.length - 1; index >= 0; index -= 1) {
             const food = world.food[index];
@@ -55,8 +62,10 @@ export class Creature {
                         this.maxEnergy,
                         this.energy + food.energy * this.parts.eatingEfficiency
                     );
+                    this.behaviorStats.foodEaten += 1;
                     world.removeFood(index);
                 }
+
                 break;
             }
         }
@@ -68,6 +77,11 @@ export class Creature {
             this.reproductionCooldown = 4;
             world.queueBirth(makeChild(this, world));
         }
+    }
+
+    get fitness() {
+        return this.age + this.behaviorStats.foodEaten * 10
+            + Math.min(this.energy, this.maxEnergy) * 0.05;
     }
 
     distanceTo(entity, world = null) {

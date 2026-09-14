@@ -222,6 +222,7 @@ export class World {
      * Get world statistics
      */
     getStats() {
+        const fitnessTotal = this.creatures.reduce((sum, creature) => sum + creature.fitness, 0);
         return {
             creatures: this.creatures.length,
             food: this.food.length,
@@ -229,7 +230,8 @@ export class World {
             tick: this.tick,
             generation: this.maxGeneration,
             births: this.births,
-            deaths: this.deaths
+            deaths: this.deaths,
+            averageFitness: this.creatures.length ? fitnessTotal / this.creatures.length : 0
         };
     }
 

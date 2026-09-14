@@ -54,13 +54,22 @@ python -m http.server 8000
 | 1-8 | Playable ecosystem, genetics, reproduction, lineages, inspector | ✅ Complete |
 | 9-12 | Modular heritable body parts, structural mutation, costs, and sensory systems | ✅ Complete |
 | 13 | Primitive neural brain (simple decision-making) | ✅ Complete |
-| 14 | Neural mutation (learning to evolve) | ⏳ Next |
+| 14 | Neural mutation (learning to evolve) | ✅ Complete |
 | 15 | Predation (carnivores, food chains) | ⏳ Planned |
 | 16 | Plants (living, growing, seeding) | ⏳ Planned |
 | 17 | Environmental zones (terrain variation) | ⏳ Planned |
 | 18+ | Advanced features (water/land, disasters, species) | 🔮 Future |
 
 Every phase ships as a playable milestone.
+
+### Phase 14: Neural mutation
+
+Each genome now carries a bounded seven-value neural policy vector
+(food direction, food distance, energy urgency, wander, persistence, risk, and
+bias). The decision brain combines live sensor inputs with these weights for
+turning and thrust; reproduction copies the vector and applies independent
+Gaussian mutations. The HUD shows population average fitness, while the
+inspector reports a creature's policy, food collected, travel, and fitness.
 
 ---
 
@@ -84,12 +93,12 @@ creaturecreator/
 │   │   └── plant.js          # Plant class (future)
 │   │
 │   ├── genetics/
-│   │   ├── genome.js         # Genetic representation
+│   │   ├── genome.js         # Genetic representation and neural policy weights
 │   │   ├── mutation.js       # Mutation rules
 │   │   └── reproduction.js   # Birth logic
 │   │
 │   ├── brain/
-│   │   ├── brain.js          # Neural/decision logic
+│   │   ├── brain.js          # Mutable neural policy/decision logic
 │   │   ├── sensors.js        # Sensory input
 │   │   └── actions.js        # Behavioral output
 │   │
@@ -183,6 +192,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 13 (Primitive heritable decision brains)
+**Current Phase:** 14 (Neural mutation and learning-to-evolve policies)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim
