@@ -145,6 +145,24 @@ function applySnapshot(data) {
     updateHud();
 }
 
+function syncControlsFromWorld() {
+    for (const [input, output, key] of [
+        [elements.foodSpawnRate, elements.foodSpawnRateValue, 'foodSpawnRate'],
+        [elements.foodEnergy, elements.foodEnergyValue, 'foodEnergy'],
+        [elements.maxFood, elements.maxFoodValue, 'maxFood'],
+        [elements.plantSpawnRate, elements.plantSpawnRateValue, 'plantSpawnRate'],
+        [elements.maxCreatures, elements.maxCreaturesValue, 'maxCreatures'],
+        [elements.maxPlants, elements.maxPlantsValue, 'maxPlants'],
+        [elements.resourcePressureSlider, elements.resourcePressureValue, 'resourcePressure']
+    ]) {
+        input.value = world.settings[key];
+        const value = Number(input.value);
+        output.textContent = key === 'foodSpawnRate' || key === 'resourcePressure'
+            ? value.toFixed(key === 'resourcePressure' ? 2 : 1) : value;
+    }
+    elements.preset.value = world.settings.preset || 'sandbox';
+}
+
 function resetSimulation() {
     world.reset(elements.resetTime.checked);
     seedWorld();
@@ -168,24 +186,6 @@ function savePreferences() {
         }));
     } catch (error) {
         setPersistenceStatus(`Preferences failed: ${error.message}`, true);
-    }
-
-    function syncControlsFromWorld() {
-        for (const [input, output, key] of [
-            [elements.foodSpawnRate, elements.foodSpawnRateValue, 'foodSpawnRate'],
-            [elements.foodEnergy, elements.foodEnergyValue, 'foodEnergy'],
-            [elements.maxFood, elements.maxFoodValue, 'maxFood'],
-            [elements.plantSpawnRate, elements.plantSpawnRateValue, 'plantSpawnRate'],
-            [elements.maxCreatures, elements.maxCreaturesValue, 'maxCreatures'],
-            [elements.maxPlants, elements.maxPlantsValue, 'maxPlants'],
-            [elements.resourcePressureSlider, elements.resourcePressureValue, 'resourcePressure']
-        ]) {
-            input.value = world.settings[key];
-            const value = Number(input.value);
-            output.textContent = key === 'foodSpawnRate' || key === 'resourcePressure'
-                ? value.toFixed(key === 'resourcePressure' ? 2 : 1) : value;
-        }
-        elements.preset.value = world.settings.preset || 'sandbox';
     }
 }
 
