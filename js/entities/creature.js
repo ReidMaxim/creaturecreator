@@ -58,19 +58,29 @@ export class Creature {
         this.y = position.y;
         this.behaviorStats.distanceTravelled += this.speed * action.thrust * deltaTime;
 
-        if (!this.isPredator) for (let index = world.food.length - 1; index >= 0; index -= 1) {
-            const food = world.food[index];
-            if (this.distanceTo(food, world) <= this.size + 6) {
-                if (this.parts.eatingEfficiency > 0) {
-                    this.energy = Math.min(
-                        this.maxEnergy,
-                        this.energy + food.energy * this.parts.eatingEfficiency
-                    );
-                    this.behaviorStats.foodEaten += 1;
-                    world.removeFood(index);
-                }
-
+        if (!this.isPredator) {
+            for (const plant of world.getNearby(this.x, this.y, this.size + 8, 'plants')) {
+                if (!plant.alive || this.distanceTo(plant, world) > this.size + 8) continue;
+                const eaten = plant.consume(9 * deltaTime + 5);
+                this.energy = Math.min(this.maxEnergy,
+                    this.energy + eaten * this.genome.plantEfficiency);
+                if (eaten > 0) this.behaviorStats.foodEaten += 1;
                 break;
+            }
+            for (let index = world.food.length - 1; index >= 0; index -= 1) {
+                const food = world.food[index];
+                if (this.distanceTo(food, world) <= this.size + 6) {
+                    if (this.parts.eatingEfficiency > 0) {
+                        this.energy = Math.min(
+                            this.maxEnergy,
+                            this.energy + food.energy * this.parts.eatingEfficiency
+                        );
+                        this.behaviorStats.foodEaten += 1;
+                        world.removeFood(index);
+                    }
+
+                    break;
+                }
             }
         }
 

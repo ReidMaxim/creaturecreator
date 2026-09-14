@@ -12,12 +12,17 @@ export function senseCreature(creature, world) {
     let nearestDistance = vision;
 
     if (vision > 0) {
-        for (const candidate of world.getNearby(creature.x, creature.y, vision, 'food')) {
+        const foodCandidates = [
+            ...world.getNearby(creature.x, creature.y, vision, 'plants'),
+            ...world.getNearby(creature.x, creature.y, vision, 'food')
+        ];
+        for (const candidate of foodCandidates) {
             const { dx, dy } = toroidalDelta(creature, candidate, world);
-            const distance = Math.hypot(dx, dy);
+            const distance = Math.hypot(dx, dy)
+                * (candidate.isPlant ? (1 - creature.genome.plantPreference * 0.35) : 1);
             if (distance < nearestDistance) {
                 nearestDistance = distance;
-                food = { direction: Math.atan2(dy, dx), distance };
+                food = { direction: Math.atan2(dy, dx), distance, isPlant: candidate.isPlant };
             }
         }
     }
@@ -51,6 +56,7 @@ export function senseCreature(creature, world) {
         threatDistance: threat ? threat.distance / Math.max(vision, 1) : 1,
         threatVisible: Boolean(threat),
         energy: creature.energy / creature.maxEnergy,
-        age: creature.age / Math.max(world.settings.maxAge, 1)
+        age: creature.age / Math.max(world.settings.maxAge, 1),
+        plantVisible: Boolean(food && food.isPlant)
     };
 }

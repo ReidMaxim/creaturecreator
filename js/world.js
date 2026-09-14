@@ -5,6 +5,7 @@
 
 import { SpatialGrid } from './utils/spatialGrid.js';
 import { Creature } from './entities/creature.js';
+import { Plant } from './entities/plant.js';
 
 export class World {
     constructor(width = 3000, height = 3000) {
@@ -15,6 +16,7 @@ export class World {
         // Entity lists
         this.creatures = [];
         this.food = [];
+        this.plants = [];
 
         // Spatial optimization
         this.spatialGrid = new SpatialGrid(width, height, 200);
@@ -24,6 +26,8 @@ export class World {
             foodSpawnRate: 2.0,        // food per second
             foodEnergy: 50,            // energy per food item
             maxFood: 500,              // maximum food items
+            plantSpawnRate: 0.8,
+            maxPlants: 260,
             maxCreatures: 180,
             worldSize: width,          // for UI reference
         };
@@ -35,7 +39,9 @@ export class World {
 
         // Spawning accumulator
         this.foodSpawnAccumulator = 0;
+        this.plantSeedAccumulator = 0;
         this.pendingBirths = [];
+        this.pendingPlantSeeds = [];
         this.nextFoodId = 1;
         this.births = 0;
         this.deaths = 0;
@@ -55,6 +61,7 @@ export class World {
 
         // Spawn new food
         this.updateFoodSpawning();
+        this.updatePlants();
 
         // Update creatures (will be implemented in creature class)
         for (const creature of [...this.creatures]) {
@@ -70,15 +77,28 @@ export class World {
             else this.deaths += 1;
         }
         this.creatures = living;
+        this.plants = this.plants.filter(plant => plant.alive);
         for (const child of this.pendingBirths.splice(0)) {
             this.addCreature(new Creature(child.x, child.y, child));
             this.births += 1;
         }
+        for (const seed of this.pendingPlantSeeds.splice(0)) this.addPlant(seed);
 
         // Rebuild spatial grid for proximity queries
         this.rebuildSpatialGrid();
 
         this.tick++;
+    }
+
+    updatePlants() {
+        this.plantSeedAccumulator += this.settings.plantSpawnRate * this.deltaTime;
+        while (this.plantSeedAccumulator >= 1 && this.plants.length < this.settings.maxPlants) {
+            this.spawnPlant();
+            this.plantSeedAccumulator -= 1;
+        }
+        for (const plant of [...this.plants]) {
+            if (plant.alive) plant.update(this.deltaTime, this);
+        }
     }
 
     /**
@@ -107,10 +127,35 @@ export class World {
             x: Math.random() * this.width,
             y: Math.random() * this.height,
             energy: this.settings.foodEnergy,
-            id: this.nextFoodId++
+            id: this.nextFoodId++,
+            isFood: true
         };
 
         this.food.push(food);
+    }
+
+    spawnPlant() {
+        if (this.plants.length >= this.settings.maxPlants) return;
+        this.addPlant(new Plant(Math.random() * this.width, Math.random() * this.height));
+    }
+
+    addPlant(plant) {
+        const wrapped = this.wrapPosition(plant.x, plant.y);
+        plant.x = wrapped.x;
+        plant.y = wrapped.y;
+        this.plants.push(plant);
+    }
+
+    queuePlantSeed(parent) {
+        if (this.plants.length + this.pendingPlantSeeds.length >= this.settings.maxPlants) return;
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 25 + Math.random() * 70;
+        this.pendingPlantSeeds.push(new Plant(
+            parent.x + Math.cos(angle) * distance,
+            parent.y + Math.sin(angle) * distance,
+            { energy: 2, maxEnergy: parent.maxEnergy, growthRate: parent.growthRate,
+                lifespan: parent.lifespan, seedTimer: 10 + Math.random() * 12 }
+        ));
     }
 
     /**
@@ -169,7 +214,9 @@ export class World {
                     result.push(entity);
                 } else if (type === 'creatures' && entity.isCreature) {
                     result.push(entity);
-                } else if (type === 'food' && !entity.isCreature) {
+                } else if (type === 'food' && entity.isFood) {
+                    result.push(entity);
+                } else if (type === 'plants' && entity.isPlant) {
                     result.push(entity);
                 }
             }
@@ -191,6 +238,7 @@ export class World {
         for (const food of this.food) {
             this.spatialGrid.insert(food);
         }
+        for (const plant of this.plants) this.spatialGrid.insert(plant);
     }
 
     /**
@@ -228,6 +276,8 @@ export class World {
         return {
             creatures: this.creatures.length,
             food: this.food.length,
+            plants: this.plants.length,
+            plantEnergy: this.plants.reduce((sum, plant) => sum + plant.energy, 0),
             time: this.time,
             tick: this.tick,
             generation: this.maxGeneration,
@@ -245,10 +295,13 @@ export class World {
     reset() {
         this.creatures = [];
         this.food = [];
+        this.plants = [];
         this.time = 0;
         this.tick = 0;
         this.foodSpawnAccumulator = 0;
+        this.plantSeedAccumulator = 0;
         this.pendingBirths = [];
+        this.pendingPlantSeeds = [];
         this.births = 0;
         this.deaths = 0;
         this.predationKills = 0;

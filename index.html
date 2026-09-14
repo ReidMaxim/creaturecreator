@@ -32,6 +32,14 @@
                     <span id="foodCount" class="value">0</span>
                 </div>
                 <div class="stat-row">
+                    <span class="label">Plants</span>
+                    <span id="plantCount" class="value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Plant energy</span>
+                    <span id="plantEnergy" class="value">0</span>
+                </div>
+                <div class="stat-row">
                     <span class="label">Predators</span>
                     <span id="predatorCount" class="value">0</span>
                 </div>
@@ -104,6 +112,11 @@
                     <label for="maxFood">Max Food</label>
                     <input type="range" id="maxFood" min="50" max="2000" step="50" value="500">
                     <span id="maxFoodValue" class="value">500</span>
+                </div>
+                <div class="control-group">
+                    <label for="plantSpawnRate">Plant Regrowth</label>
+                    <input type="range" id="plantSpawnRate" min="0" max="4" step="0.1" value="0.8">
+                    <span id="plantSpawnRateValue" class="value">0.8</span>
                 </div>
             </div>
 
