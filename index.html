@@ -44,6 +44,14 @@
                     <span id="predatorCount" class="value">0</span>
                 </div>
                 <div class="stat-row">
+                    <span class="label">Pop. ratio (P:H)</span>
+                    <span id="populationRatio" class="value">0:0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Resource pressure</span>
+                    <span id="resourcePressure" class="value">0%</span>
+                </div>
+                <div class="stat-row">
                     <span class="label">Kills</span>
                     <span id="killCount" class="value">0</span>
                 </div>
@@ -148,6 +156,15 @@
             <!-- Bottom Right: Environment Controls -->
             <div id="envControls" class="panel bottom-right">
                 <div class="control-group">
+                    <label for="preset">Simulation preset</label>
+                    <select id="preset" class="select">
+                        <option value="balanced">Balanced</option>
+                        <option value="predator-rich">Predator-rich</option>
+                        <option value="plant-rich">Plant-rich</option>
+                        <option value="sandbox">Sandbox / custom</option>
+                    </select>
+                </div>
+                <div class="control-group">
                     <label for="foodSpawnRate">Food Spawn Rate</label>
                     <input type="range" id="foodSpawnRate" min="0.1" max="10" step="0.5" value="2">
                     <span id="foodSpawnRateValue" class="value">2</span>
@@ -166,6 +183,21 @@
                     <label for="plantSpawnRate">Plant Regrowth</label>
                     <input type="range" id="plantSpawnRate" min="0" max="4" step="0.1" value="0.8">
                     <span id="plantSpawnRateValue" class="value">0.8</span>
+                </div>
+                <div class="control-group">
+                    <label for="maxCreatures">Creature Capacity</label>
+                    <input type="range" id="maxCreatures" min="20" max="500" step="10" value="180">
+                    <span id="maxCreaturesValue" class="value">180</span>
+                </div>
+                <div class="control-group">
+                    <label for="maxPlants">Plant Capacity</label>
+                    <input type="range" id="maxPlants" min="20" max="1000" step="20" value="260">
+                    <span id="maxPlantsValue" class="value">260</span>
+                </div>
+                <div class="control-group">
+                    <label for="resourcePressureSlider">Resource Pressure</label>
+                    <input type="range" id="resourcePressureSlider" min="0.5" max="2" step="0.05" value="1">
+                    <span id="resourcePressureValue" class="value">1.00x</span>
                 </div>
             </div>
 

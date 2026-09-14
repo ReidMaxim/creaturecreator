@@ -62,7 +62,7 @@ python -m http.server 8000
 | 18 | Environmental events and species/lineage diversity | ✅ Complete |
 | 19 | Persistence, JSON import/export, and population history | ✅ Complete |
 | 20 | Experiment controls and live analytics | ✅ Complete |
-| 21+ | Advanced ecosystem features | 🔮 Future |
+| 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -102,6 +102,16 @@ cumulative births, deaths, and predation kills plus recent environmental event
 transitions. The population chart also includes average fitness. Reset and
 load clear inspector selection so stale entity references are not retained.
 See [`docs/PHASE20.md`](./docs/PHASE20.md).
+
+### Phase 21: Ecosystem balance and resource pressure
+
+The environment panel now includes balanced, predator-rich, plant-rich, and
+sandbox/custom presets. Presets configure carrying capacities and resource
+production without changing predator behavior or preventing predator die-off.
+Custom capacity and pressure sliders remain available for experiments, and the
+selected preset is retained in preferences and serialized snapshots. The HUD
+reports resource pressure and the predator-to-herbivore population ratio so
+long-running outcomes are measurable. See [`docs/PHASE21.md`](./docs/PHASE21.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -180,7 +190,8 @@ creaturecreator/
 │   ├── PHASE17.md            # Environmental zones implementation notes
 │   ├── PHASE18.md            # Environmental events and diversity notes
 │   ├── PHASE19.md            # Persistence and population history notes
-│   └── PHASE20.md            # Experiment controls and live analytics notes
+│   ├── PHASE20.md            # Experiment controls and live analytics notes
+│   └── PHASE21.md            # Ecosystem balance controls and resource analytics
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
