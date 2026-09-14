@@ -82,6 +82,10 @@
             <!-- Top Right: Controls -->
             <div id="controls" class="panel top-right">
                 <button id="playPauseBtn" class="btn btn-primary">▶ Play</button>
+                <button id="resetBtn" class="btn">Reset &amp; reseed</button>
+                <label class="check-label"><input id="resetPause" type="checkbox" checked> pause after reset</label>
+                <label class="check-label"><input id="resetTime" type="checkbox" checked> reset time</label>
+                <label class="check-label"><input id="autoStart" type="checkbox"> auto-start</label>
                 <div class="spacer"></div>
                 <div class="control-group">
                     <label for="speedSlider">Simulation Speed</label>
@@ -112,7 +116,17 @@
             <div id="historyPanel" class="panel history-panel">
                 <div class="panel-heading">Population history</div>
                 <canvas id="historyCanvas" width="240" height="90"></canvas>
-                <div class="history-legend"><i></i> creatures <i></i> plants <i></i> predators</div>
+                <div class="history-legend"><i></i> creatures <i></i> plants <i></i> predators <i></i> fitness</div>
+            </div>
+
+            <div id="analyticsPanel" class="panel analytics-panel">
+                <div class="panel-heading">Live analytics</div>
+                <div class="analytics-totals">
+                    <span>Births <b id="birthCount">0</b></span>
+                    <span>Deaths <b id="deathCount">0</b></span>
+                    <span>Kills <b id="analyticsKillCount">0</b></span>
+                </div>
+                <div id="eventLog" class="event-log" role="log" aria-live="polite"></div>
             </div>
 
             <!-- Bottom Left: Camera Info -->

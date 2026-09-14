@@ -61,7 +61,8 @@ python -m http.server 8000
 | 17 | Environmental zones (terrain variation) | ✅ Complete |
 | 18 | Environmental events and species/lineage diversity | ✅ Complete |
 | 19 | Persistence, JSON import/export, and population history | ✅ Complete |
-| 20+ | Advanced ecosystem features | 🔮 Future |
+| 20 | Experiment controls and live analytics | ✅ Complete |
+| 21+ | Advanced ecosystem features | 🔮 Future |
 
 Every phase ships as a playable milestone.
 
@@ -92,6 +93,15 @@ and behavior statistics, and the camera. Invalid data is rejected with a visible
 error. A bounded population history chart tracks creatures, plants, and
 predators without adding dependencies. See
 [`docs/PHASE19.md`](./docs/PHASE19.md).
+
+### Phase 20: Experiment controls and live analytics
+
+Reset-and-reseed controls now support optional time reset, pause-after-reset,
+and persisted auto-start preferences. A bounded live analytics panel reports
+cumulative births, deaths, and predation kills plus recent environmental event
+transitions. The population chart also includes average fitness. Reset and
+load clear inspector selection so stale entity references are not retained.
+See [`docs/PHASE20.md`](./docs/PHASE20.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -168,7 +178,9 @@ creaturecreator/
 │   ├── DESIGN.md             # Architecture & philosophy
 │   ├── PHASES.md             # Detailed phase breakdown
 │   ├── PHASE17.md            # Environmental zones implementation notes
-│   └── PHASE18.md            # Environmental events and diversity notes
+│   ├── PHASE18.md            # Environmental events and diversity notes
+│   ├── PHASE19.md            # Persistence and population history notes
+│   └── PHASE20.md            # Experiment controls and live analytics notes
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -239,6 +251,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 19 (Persistence and observability)
+**Current Phase:** 20 (Experiment controls and live analytics)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim
