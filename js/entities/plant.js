@@ -16,11 +16,14 @@ export class Plant {
         this.seedInterval = options.seedInterval ?? randomFloat(15, 28);
         this.alive = true;
         this.isPlant = true;
+        this.zoneType = options.zoneType || 'meadow';
     }
 
     update(deltaTime, world) {
         this.age += deltaTime;
-        this.energy = Math.min(this.maxEnergy, this.energy + this.growthRate * deltaTime);
+        const zone = world.getZoneAt(this.x, this.y);
+        this.zoneType = zone.type;
+        this.energy = Math.min(this.maxEnergy, this.energy + this.growthRate * zone.plantGrowth * deltaTime);
         this.seedTimer -= deltaTime;
         if (this.seedTimer <= 0 && this.energy >= this.maxEnergy * 0.55) {
             world.queuePlantSeed(this);
