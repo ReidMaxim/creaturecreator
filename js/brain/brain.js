@@ -19,17 +19,29 @@ export class DecisionBrain {
         }
 
         const foodSignal = senses.foodVisible ? 1 - senses.foodDistance : 0;
-        const foodAngle = normalizeAngle(senses.foodDirection - creature.rotation);
+        const fleeing = !creature.isPredator && senses.threatVisible;
+        const target = creature.isPredator && senses.preyVisible
+            ? { direction: senses.preyDirection, distance: senses.preyDistance }
+            : fleeing
+                ? { direction: senses.threatDirection + Math.PI, distance: senses.threatDistance }
+            : { direction: senses.foodDirection, distance: senses.foodDistance };
+        const foodAngle = normalizeAngle(target.direction - creature.rotation);
+        const targetSignal = (creature.isPredator && senses.preyVisible)
+            ? 1 - target.distance
+            : fleeing ? 1 - target.distance
+            : foodSignal;
         const urgency = 1 - clamp(senses.energy, 0, 1);
         const ageFactor = clamp(senses.age, 0, 1);
         const weights = this.genome.neuralWeights;
         const inputs = {
-            foodDirection: Math.sin(foodAngle) * (senses.foodVisible ? 1 : 0)
-                * this.genome.foodAttraction,
-            foodDistance: foodSignal * this.genome.foodAttraction,
+            foodDirection: Math.sin(foodAngle) * ((creature.isPredator || fleeing)
+                ? (senses.preyVisible || senses.threatVisible ? 1 : 0)
+                : senses.foodVisible ? 1 : 0)
+                * (creature.isPredator ? this.genome.diet : fleeing ? this.genome.defense : this.genome.foodAttraction),
+            foodDistance: targetSignal * (creature.isPredator ? this.genome.diet : this.genome.foodAttraction),
             energyUrgency: urgency,
             wander: this.wanderDirection * this.genome.wander
-                * (1 + ageFactor * 0.25) * (1 - foodSignal * 0.75),
+                * (1 + ageFactor * 0.25)                 * (1 - targetSignal * 0.75),
             persistence: this.lastAction.turn * this.genome.persistence,
             risk: urgency * this.genome.risk,
             bias: 1
@@ -42,7 +54,7 @@ export class DecisionBrain {
             0
         );
         const turn = clamp(Math.tanh(turnSignal), -1, 1);
-        const driveSignal = weights.foodDistance * foodSignal
+        const driveSignal = weights.foodDistance * targetSignal
             + weights.energyUrgency * urgency
             + weights.risk * urgency * this.genome.risk
             + weights.bias;

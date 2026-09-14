@@ -15,7 +15,7 @@ export class Creature {
         this.parts = createBodyParts(this.genome);
         this.brain = new DecisionBrain(this.genome);
         this.size = this.genome.size;
-        this.speed = this.genome.speed * this.parts.movementFactor;
+        this.speed = this.genome.speed * this.parts.movementFactor * (0.82 + this.parts.agility * 0.18);
         this.maxEnergy = this.genome.maxEnergy;
         this.energy = options.energy ?? randomFloat(this.maxEnergy * 0.7, this.maxEnergy);
         this.age = options.age || 0;
@@ -25,9 +25,12 @@ export class Creature {
         this.alive = true;
         this.isCreature = true;
         this.color = `hsl(${Math.round(this.genome.hue)} 75% 60%)`;
+        this.isPredator = this.genome.diet >= 0.52;
+        this.attackCooldown = 0;
         this.reproductionCooldown = 0;
         this.behaviorStats = {
             foodEaten: 0,
+            kills: 0,
             distanceTravelled: 0,
             decisions: 0
         };
@@ -36,6 +39,7 @@ export class Creature {
     update(deltaTime, world) {
         this.age += deltaTime;
         this.reproductionCooldown = Math.max(0, this.reproductionCooldown - deltaTime);
+        this.attackCooldown = Math.max(0, this.attackCooldown - deltaTime);
         this.energy -= deltaTime * (this.genome.metabolism + this.parts.metabolicCost);
         if (this.energy <= 0 || this.age >= world.settings.maxAge) {
             this.alive = false;
@@ -54,7 +58,7 @@ export class Creature {
         this.y = position.y;
         this.behaviorStats.distanceTravelled += this.speed * action.thrust * deltaTime;
 
-        for (let index = world.food.length - 1; index >= 0; index -= 1) {
+        if (!this.isPredator) for (let index = world.food.length - 1; index >= 0; index -= 1) {
             const food = world.food[index];
             if (this.distanceTo(food, world) <= this.size + 6) {
                 if (this.parts.eatingEfficiency > 0) {
@@ -70,6 +74,32 @@ export class Creature {
             }
         }
 
+        if (this.isPredator && this.attackCooldown <= 0) {
+            const attackRange = this.size + 5 + this.parts.bite * 5;
+            let target = null;
+            let targetDistance = attackRange;
+            for (const candidate of world.getNearby(this.x, this.y, attackRange, 'creatures')) {
+                if (candidate === this || !candidate.alive || candidate.isPredator) continue;
+                const distance = this.distanceTo(candidate, world);
+                if (distance < targetDistance) {
+                    target = candidate;
+                    targetDistance = distance;
+                }
+            }
+            if (target) {
+                const damage = this.parts.bite * (1.1 + this.genome.attack)
+                    - target.parts.defense * 0.45;
+                if (damage > 0.15) {
+                    target.alive = false;
+                    target.deathCause = 'predation';
+                    this.energy = Math.min(this.maxEnergy, this.energy + 30 + damage * 14);
+                    this.behaviorStats.kills += 1;
+                    this.attackCooldown = Math.max(0.55, 1.8 - this.parts.bite * 0.5);
+                    world.predationKills += 1;
+                }
+            }
+        }
+
         if (this.age >= this.genome.reproductionAge &&
             this.energy >= this.genome.reproductionThreshold &&
             this.reproductionCooldown <= 0) {
@@ -80,7 +110,7 @@ export class Creature {
     }
 
     get fitness() {
-        return this.age + this.behaviorStats.foodEaten * 10
+        return this.age + this.behaviorStats.foodEaten * 10 + this.behaviorStats.kills * 18
             + Math.min(this.energy, this.maxEnergy) * 0.05;
     }
 

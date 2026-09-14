@@ -39,6 +39,7 @@ export class World {
         this.nextFoodId = 1;
         this.births = 0;
         this.deaths = 0;
+        this.predationKills = 0;
         this.maxGeneration = 0;
         this.settings.maxAge = 180;
         this.settings.mutationRate = 0.08;
@@ -116,8 +117,9 @@ export class World {
      * Add creature to world
      */
     addCreature(creature) {
-        creature.x = Math.max(0, Math.min(this.width, creature.x));
-        creature.y = Math.max(0, Math.min(this.height, creature.y));
+        const wrapped = this.wrapPosition(creature.x, creature.y);
+        creature.x = wrapped.x;
+        creature.y = wrapped.y;
         this.creatures.push(creature);
         this.maxGeneration = Math.max(this.maxGeneration, creature.generation);
     }
@@ -231,7 +233,9 @@ export class World {
             generation: this.maxGeneration,
             births: this.births,
             deaths: this.deaths,
-            averageFitness: this.creatures.length ? fitnessTotal / this.creatures.length : 0
+            averageFitness: this.creatures.length ? fitnessTotal / this.creatures.length : 0,
+            predators: this.creatures.filter(creature => creature.isPredator).length,
+            predationKills: this.predationKills
         };
     }
 
@@ -247,6 +251,7 @@ export class World {
         this.pendingBirths = [];
         this.births = 0;
         this.deaths = 0;
+        this.predationKills = 0;
         this.maxGeneration = 0;
         this.spatialGrid.clear();
     }
