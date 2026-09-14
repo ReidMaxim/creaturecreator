@@ -44,6 +44,7 @@ python -m http.server 8000
 | **Space** | Play / Pause |
 | **Click Creature** | Select & inspect |
 | **Slider Controls** | Adjust simulation speed, environment |
+| **Simulation data panel** | Save/load locally, export/import JSON |
 
 ---
 
@@ -59,7 +60,8 @@ python -m http.server 8000
 | 16 | Plants (living, growing, seeding) | ✅ Complete |
 | 17 | Environmental zones (terrain variation) | ✅ Complete |
 | 18 | Environmental events and species/lineage diversity | ✅ Complete |
-| 19+ | Advanced ecosystem features and persistence | 🔮 Future |
+| 19 | Persistence, JSON import/export, and population history | ✅ Complete |
+| 20+ | Advanced ecosystem features | 🔮 Future |
 
 Every phase ships as a playable milestone.
 
@@ -80,6 +82,16 @@ the HUD and applies lightweight growth, spawn, movement, or energy modifiers;
 the renderer adds a subtle event tint. Live species signatures and inherited
 lineage roots are tracked for population diversity without changing predator
 balance. See [`docs/PHASE18.md`](./docs/PHASE18.md).
+
+### Phase 19: Persistence and observability
+
+Simulation saves can be stored in browser localStorage, exported as a JSON
+download, or imported from a JSON file (or the built-in textarea). Saves include
+world settings, time/counters, entities, genomes and neural policies, lineage
+and behavior statistics, and the camera. Invalid data is rejected with a visible
+error. A bounded population history chart tracks creatures, plants, and
+predators without adding dependencies. See
+[`docs/PHASE19.md`](./docs/PHASE19.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -146,11 +158,6 @@ creaturecreator/
 │   │   ├── motor.js          # Movement part
 │   │   └── armor.js          # Defense part (future)
 │   │
-│   ├── ui/
-│   │   ├── controls.js       # UI interactions
-│   │   ├── inspector.js      # Creature details panel
-│   │   └── graphs.js         # Statistics visualization
-│   │
 │   └── utils/
 │       ├── math.js           # Vector & utility math
 │       ├── random.js         # Seeded RNG
@@ -186,7 +193,7 @@ creaturecreator/
 - **CSS3** — Responsive, accessible styling
 - **Vanilla JavaScript (ES6 modules)** — No frameworks initially
 - **Canvas 2D** — Rendering & animation
-- **LocalStorage** — Save/load (Phase 25)
+- **LocalStorage and JSON files** — Browser-local save/load and portable exports
 
 ---
 
@@ -232,6 +239,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 18 (Environmental events and diversity)
+**Current Phase:** 19 (Persistence and observability)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim
