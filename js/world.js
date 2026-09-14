@@ -51,6 +51,9 @@ export class World {
         this.maxGeneration = 0;
         this.settings.maxAge = 180;
         this.settings.mutationRate = 0.08;
+        this.event = null;
+        this.nextEventAt = 38 + Math.random() * 18;
+        this.eventHistory = [];
     }
 
     /**
@@ -59,6 +62,7 @@ export class World {
     update(deltaTime, simulationSpeed = 1) {
         this.deltaTime = deltaTime * simulationSpeed;
         this.time += this.deltaTime;
+        this.updateEnvironmentalEvent();
         this.rebuildSpatialGrid();
 
         // Spawn new food
@@ -93,7 +97,9 @@ export class World {
     }
 
     updatePlants() {
-        this.plantSeedAccumulator += this.settings.plantSpawnRate * this.deltaTime;
+        const effects = this.getEnvironmentEffects();
+        this.plantSeedAccumulator += this.settings.plantSpawnRate
+            * effects.plantSpawn * this.deltaTime;
         while (this.plantSeedAccumulator >= 1 && this.plants.length < this.settings.maxPlants) {
             this.spawnPlant();
             this.plantSeedAccumulator -= 1;
@@ -111,7 +117,8 @@ export class World {
             return;
         }
 
-        this.foodSpawnAccumulator += this.settings.foodSpawnRate * this.deltaTime;
+        this.foodSpawnAccumulator += this.settings.foodSpawnRate
+            * this.getEnvironmentEffects().foodSpawn * this.deltaTime;
 
         while (this.foodSpawnAccumulator >= 1.0) {
             this.spawnFood();
@@ -143,7 +150,7 @@ export class World {
         const x = Math.random() * this.width;
         const y = Math.random() * this.height;
         const zone = this.getZoneAt(x, y);
-        if (Math.random() > zone.plantDensity) return;
+        if (Math.random() > zone.plantDensity * this.getEnvironmentEffects().plantDensity) return;
         this.addPlant(new Plant(x, y, { zoneType: zone.type }));
     }
 
@@ -239,6 +246,43 @@ export class World {
         return zoneAt(this.zones, this.width, this.height, x, y);
     }
 
+    getEnvironmentEffects() {
+        if (!this.event) {
+            return { plantGrowth: 1, plantSpawn: 1, plantDensity: 1, foodSpawn: 1,
+                movement: 1, energyDrain: 1 };
+        }
+        return this.event.effects;
+    }
+
+    updateEnvironmentalEvent() {
+        if (this.event) {
+            this.event.remaining = Math.max(0, this.event.remaining - this.deltaTime);
+            if (this.event.remaining === 0) {
+                this.eventHistory.push(this.event.type);
+                this.event = null;
+                this.nextEventAt = this.time + 42 + Math.random() * 24;
+            }
+            return;
+        }
+        if (this.time < this.nextEventAt) return;
+        const events = [
+            { type: 'drought', name: 'Drought', duration: 24, color: '#f59e0b',
+                summary: 'Dry air limits plant growth and food.' ,
+                effects: { plantGrowth: 0.35, plantSpawn: 0.55, plantDensity: 0.65,
+                    foodSpawn: 0.6, movement: 0.94, energyDrain: 1.06 } },
+            { type: 'bloom', name: 'Algal bloom', duration: 22, color: '#22c55e',
+                summary: 'A burst of growth feeds the ecosystem.',
+                effects: { plantGrowth: 1.8, plantSpawn: 1.7, plantDensity: 1.25,
+                    foodSpawn: 1.25, movement: 1, energyDrain: 0.98 } },
+            { type: 'storm', name: 'Storm', duration: 18, color: '#60a5fa',
+                summary: 'Heavy weather slows movement.',
+                effects: { plantGrowth: 0.8, plantSpawn: 0.8, plantDensity: 0.9,
+                    foodSpawn: 1.35, movement: 0.68, energyDrain: 1.12 } }
+        ];
+        const selected = events[Math.floor(Math.random() * events.length)];
+        this.event = { ...selected, remaining: selected.duration };
+    }
+
     /**
      * Rebuild spatial grid from all entities
      */
@@ -289,6 +333,12 @@ export class World {
         const fitnessTotal = this.creatures.reduce((sum, creature) => sum + creature.fitness, 0);
         const zoneCounts = Object.fromEntries(Object.keys(ZONE_DEFINITIONS).map(type => [type, 0]));
         for (const creature of this.creatures) zoneCounts[this.getZoneAt(creature.x, creature.y).type] += 1;
+        const species = new Set();
+        const lineages = new Set();
+        for (const creature of this.creatures) {
+            species.add(this.getSpeciesKey(creature));
+            lineages.add(creature.lineageId || creature.id);
+        }
         return {
             creatures: this.creatures.length,
             food: this.food.length,
@@ -302,8 +352,20 @@ export class World {
             averageFitness: this.creatures.length ? fitnessTotal / this.creatures.length : 0,
             predators: this.creatures.filter(creature => creature.isPredator).length,
             predationKills: this.predationKills,
-            zoneCounts
+            zoneCounts,
+            species: species.size,
+            lineages: lineages.size,
+            event: this.event
         };
+    }
+
+    getSpeciesKey(creature) {
+        const genome = creature.genome;
+        const diet = genome.diet >= 0.52 ? 'c' : 'h';
+        const size = Math.round(genome.size / 3);
+        const speed = Math.round(genome.speed / 10);
+        const hue = Math.floor(genome.hue / 45);
+        return `${diet}-${size}-${speed}-${hue}`;
     }
 
     /**
@@ -323,6 +385,9 @@ export class World {
         this.deaths = 0;
         this.predationKills = 0;
         this.maxGeneration = 0;
+        this.event = null;
+        this.nextEventAt = 38 + Math.random() * 18;
+        this.eventHistory = [];
         this.spatialGrid.clear();
     }
 }

@@ -23,7 +23,8 @@ export class Plant {
         this.age += deltaTime;
         const zone = world.getZoneAt(this.x, this.y);
         this.zoneType = zone.type;
-        this.energy = Math.min(this.maxEnergy, this.energy + this.growthRate * zone.plantGrowth * deltaTime);
+        this.energy = Math.min(this.maxEnergy, this.energy + this.growthRate
+            * zone.plantGrowth * world.getEnvironmentEffects().plantGrowth * deltaTime);
         this.seedTimer -= deltaTime;
         if (this.seedTimer <= 0 && this.energy >= this.maxEnergy * 0.55) {
             world.queuePlantSeed(this);

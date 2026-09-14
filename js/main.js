@@ -40,6 +40,11 @@ const elements = {
     plantCount: document.getElementById('plantCount'),
     plantEnergy: document.getElementById('plantEnergy'),
     averageFitness: document.getElementById('averageFitness'),
+    diversity: document.getElementById('diversity'),
+    eventStatus: document.getElementById('eventStatus'),
+    eventName: document.getElementById('eventName'),
+    eventCountdown: document.getElementById('eventCountdown'),
+    eventSummary: document.getElementById('eventSummary'),
     predatorCount: document.getElementById('predatorCount'),
     killCount: document.getElementById('killCount'),
     meadowCount: document.getElementById('meadowCount'),
@@ -71,6 +76,7 @@ function updateHud() {
     elements.plantCount.textContent = stats.plants;
     elements.plantEnergy.textContent = Math.round(stats.plantEnergy);
     elements.averageFitness.textContent = stats.averageFitness.toFixed(1);
+    elements.diversity.textContent = `${stats.species} / ${stats.lineages}`;
     elements.predatorCount.textContent = stats.predators;
     elements.killCount.textContent = stats.predationKills;
     elements.meadowCount.textContent = stats.zoneCounts.meadow;
@@ -80,6 +86,15 @@ function updateHud() {
     elements.camX.textContent = Math.round(renderer.camera.x);
     elements.camY.textContent = Math.round(renderer.camera.y);
     elements.zoom.textContent = `${renderer.getZoom().toFixed(1)}x`;
+    if (stats.event) {
+        elements.eventStatus.classList.remove('hidden');
+        elements.eventStatus.style.setProperty('--event-color', stats.event.color);
+        elements.eventName.textContent = stats.event.name;
+        elements.eventCountdown.textContent = `${Math.ceil(stats.event.remaining)}s`;
+        elements.eventSummary.textContent = stats.event.summary;
+    } else {
+        elements.eventStatus.classList.add('hidden');
+    }
 }
 
 function inspectCreature(creature) {
