@@ -146,6 +146,7 @@ export class Renderer {
      * Draw food item
      */
     drawFood(food) {
+        if (!this.isVisible(food.x, food.y, 8)) return;
         const screen = this.worldToScreen(food.x, food.y);
 
         // Draw circle
@@ -163,6 +164,7 @@ export class Renderer {
     }
 
     drawPlant(plant) {
+        if (!this.isVisible(plant.x, plant.y, 12)) return;
         const screen = this.worldToScreen(plant.x, plant.y);
         const size = (3 + 5 * plant.energy / plant.maxEnergy) * this.camera.zoom;
         this.ctx.fillStyle = '#65a30d';
@@ -181,6 +183,7 @@ export class Renderer {
      * Draw creature
      */
     drawCreature(creature) {
+        if (!this.isVisible(creature.x, creature.y, creature.size + 10)) return;
         const screen = this.worldToScreen(creature.x, creature.y);
         const size = creature.size * this.camera.zoom;
 
@@ -255,6 +258,7 @@ export class Renderer {
      */
     draw(world) {
         this.clear();
+        this.visibleBounds = this.getVisibleBounds();
         this.drawZones(world);
         if (world.event) this.drawEventEffect(world.event);
 
@@ -273,6 +277,12 @@ export class Renderer {
         for (const creature of world.creatures) {
             this.drawCreature(creature);
         }
+    }
+
+    isVisible(x, y, padding = 0) {
+        const bounds = this.visibleBounds || this.getVisibleBounds();
+        return x >= bounds.minX - padding && x <= bounds.maxX + padding
+            && y >= bounds.minY - padding && y <= bounds.maxY + padding;
     }
 
     drawEventEffect(event) {

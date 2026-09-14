@@ -1,7 +1,7 @@
 import { Creature } from './entities/creature.js';
 import { Renderer } from './renderer.js';
 import { World, SIMULATION_PRESETS } from './world.js';
-import { randomFloat } from './utils/random.js';
+import { randomFloat, setRandomSeed } from './utils/random.js';
 
 const canvas = document.getElementById('canvas');
 const world = new World();
@@ -95,6 +95,9 @@ const elements = {
     ,deathCount: document.getElementById('deathCount')
     ,analyticsKillCount: document.getElementById('analyticsKillCount')
     ,eventLog: document.getElementById('eventLog')
+    ,seed: document.getElementById('seed')
+    ,experimentLabel: document.getElementById('experimentLabel')
+    ,applySeed: document.getElementById('applySeed')
 };
 
 try {
@@ -108,6 +111,10 @@ try {
     setPersistenceStatus(`Preferences unavailable: ${error.message}`, true);
 }
 elements.preset.value = world.settings.preset;
+elements.seed.value = String(world.seed);
+elements.experimentLabel.value = world.experimentLabel;
+setRandomSeed(world.seed);
+world.nextEventAt = world.time + 38 + randomFloat(0, 18);
 
 seedWorld();
 
@@ -132,6 +139,9 @@ function applySnapshot(data) {
         throw new Error('This is not a Creature Creator Phase 19 save.');
     }
     world.loadSnapshot(data.world);
+    setRandomSeed(world.seed);
+    elements.seed.value = String(world.seed);
+    elements.experimentLabel.value = world.experimentLabel;
     if (data.camera && Number.isFinite(data.camera.x) && Number.isFinite(data.camera.y)) {
         renderer.setCameraPosition(data.camera.x, data.camera.y);
         if (Number.isFinite(data.camera.zoom)) renderer.setCameraZoom(data.camera.zoom);
@@ -149,6 +159,7 @@ function applySnapshot(data) {
 }
 
 function resetSimulation() {
+    setRandomSeed(world.seed);
     world.reset(elements.resetTime.checked);
     seedWorld();
     renderer.selectedCreature = null;
@@ -402,6 +413,19 @@ function applyPreset() {
 
 elements.playPause.addEventListener('click', () => setRunning(!state.running));
 elements.reset.addEventListener('click', resetSimulation);
+elements.applySeed.addEventListener('click', () => {
+    const seed = Number(elements.seed.value);
+    if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295) {
+        setPersistenceStatus('Seed must be an integer from 0 to 4294967295.', true);
+        return;
+    }
+    world.seed = seed;
+    resetSimulation();
+    setPersistenceStatus(`Reset with seed ${world.seed}.`);
+});
+elements.experimentLabel.addEventListener('input', () => {
+    world.experimentLabel = elements.experimentLabel.value.slice(0, 80);
+});
 elements.preset.addEventListener('change', applyPreset);
 elements.reproductionMode.addEventListener('change', () => {
     world.settings.reproductionMode = elements.reproductionMode.value === 'sexual' ? 'sexual' : 'asexual';

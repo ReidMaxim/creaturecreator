@@ -173,6 +173,36 @@ canvas {
     padding: 5px;
 }
 
+#experimentLabel, #seed {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    background: rgba(0,0,0,0.25);
+    color: #dbeafe;
+    padding: 6px;
+}
+
+.seed-row {
+    display: flex;
+    gap: 5px;
+}
+
+.seed-row #seed {
+    min-width: 0;
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid #facc15;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
 .persistence-status {
     min-height: 13px;
     color: #86efac;

@@ -9,7 +9,7 @@
 <body>
     <div id="container">
         <!-- Main Canvas -->
-        <canvas id="canvas"></canvas>
+        <canvas id="canvas" aria-label="Creature Creator simulation canvas"></canvas>
 
         <!-- HUD Overlay -->
         <div id="hud">
@@ -114,6 +114,13 @@
 
             <div id="persistence" class="panel persistence-panel">
                 <div class="panel-heading">Simulation data</div>
+                <label for="experimentLabel">Experiment label</label>
+                <input id="experimentLabel" type="text" maxlength="80" placeholder="Untitled experiment">
+                <label for="seed">Deterministic seed</label>
+                <div class="seed-row">
+                    <input id="seed" type="number" min="0" max="4294967295" step="1" inputmode="numeric">
+                    <button id="applySeed" class="btn" type="button">Reset with seed</button>
+                </div>
                 <div class="button-row">
                     <button id="saveBtn" class="btn">Save</button>
                     <button id="loadBtn" class="btn">Load</button>
