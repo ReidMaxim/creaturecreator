@@ -1,4 +1,6 @@
 import { random, randomFloat, randomGaussian, randomInt } from '../utils/random.js';
+const bounded = (value, min, max, fallback) => Number.isFinite(Number(value))
+    ? Math.max(min, Math.min(max, Number(value))) : fallback;
 
 export const GENE_LIMITS = {
     size: [6, 22],
@@ -23,7 +25,25 @@ export const GENE_LIMITS = {
     defense: [0.15, 1],
     agility: [0.2, 1],
     plantPreference: [0, 1],
-    plantEfficiency: [0.45, 1.25]
+    plantEfficiency: [0.45, 1.25],
+    bodyShape: [0, 3],
+    bodyWidth: [0.65, 1.45],
+    bodyLength: [0.75, 1.65],
+    bodyTaper: [0.55, 1.35],
+    tailStyle: [0, 2],
+    pattern: [0, 3],
+    patternScale: [0.45, 1.5],
+    saturation: [0.35, 1],
+    lightness: [0.35, 0.75],
+    eyeStyle: [0, 2],
+    eyeSpacing: [0.55, 1.45],
+    pupilSize: [0.2, 0.75],
+    mouthStyle: [0, 2],
+    mouthSize: [0.55, 1.45],
+    armor: [0, 1],
+    fin: [0, 1],
+    finAngle: [-0.45, 0.45],
+    motorLength: [0.55, 1.45]
 };
 
 // A small policy vector keeps behavior heritable without introducing a
@@ -76,6 +96,24 @@ export class Genome {
         this.agility = values.agility ?? randomFloat(0.35, 0.8);
         this.plantPreference = values.plantPreference ?? randomFloat(0.55, 0.95);
         this.plantEfficiency = values.plantEfficiency ?? randomFloat(0.7, 1.05);
+        this.bodyShape = bounded(values.bodyShape, 0, 3, randomInt(0, 4));
+        this.bodyWidth = bounded(values.bodyWidth, 0.65, 1.45, randomFloat(0.82, 1.2));
+        this.bodyLength = bounded(values.bodyLength, 0.75, 1.65, randomFloat(0.9, 1.35));
+        this.bodyTaper = bounded(values.bodyTaper, 0.55, 1.35, randomFloat(0.75, 1.15));
+        this.tailStyle = bounded(values.tailStyle, 0, 2, randomInt(0, 3));
+        this.pattern = bounded(values.pattern, 0, 3, randomInt(0, 4));
+        this.patternScale = bounded(values.patternScale, 0.45, 1.5, randomFloat(0.75, 1.2));
+        this.saturation = bounded(values.saturation, 0.35, 1, randomFloat(0.62, 0.92));
+        this.lightness = bounded(values.lightness, 0.35, 0.75, randomFloat(0.5, 0.68));
+        this.eyeStyle = bounded(values.eyeStyle, 0, 2, randomInt(0, 3));
+        this.eyeSpacing = bounded(values.eyeSpacing, 0.55, 1.45, randomFloat(0.8, 1.2));
+        this.pupilSize = bounded(values.pupilSize, 0.2, 0.75, randomFloat(0.32, 0.55));
+        this.mouthStyle = bounded(values.mouthStyle, 0, 2, randomInt(0, 3));
+        this.mouthSize = bounded(values.mouthSize, 0.55, 1.45, randomFloat(0.8, 1.2));
+        this.armor = bounded(values.armor, 0, 1, randomFloat(0.25, 0.8));
+        this.fin = bounded(values.fin, 0, 1, randomFloat(0.25, 0.85));
+        this.finAngle = bounded(values.finAngle, -0.45, 0.45, randomFloat(-0.18, 0.18));
+        this.motorLength = bounded(values.motorLength, 0.55, 1.45, randomFloat(0.8, 1.2));
         this.neuralWeights = {};
         const inheritedWeights = values.neuralWeights || {};
         for (const name of NEURAL_WEIGHT_NAMES) {

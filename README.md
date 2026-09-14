@@ -63,6 +63,7 @@ python -m http.server 8000
 | 19 | Persistence, JSON import/export, and population history | ✅ Complete |
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
+| 27 | Bounded heritable phenotypes, body plans, and evolved rendering | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -113,6 +114,15 @@ selected preset is retained in preferences and serialized snapshots. The HUD
 reports resource pressure and the predator-to-herbivore population ratio so
 long-running outcomes are measurable. See [`docs/PHASE21.md`](./docs/PHASE21.md).
 
+### Phase 27: Heritable phenotypes and body plans
+
+Bounded geometry, appearance, appendage, and defense genes now derive a
+clamped phenotype shared by simulation and rendering. Creatures grow into
+multiple deterministic silhouettes with markings, variable eyes/mouths/motors,
+defense features, and energy/age/state cues. The inspector reports both
+phenotype traits and current visual state, while existing JSON saves and
+controls remain compatible. See [`docs/PHASE27.md`](./docs/PHASE27.md).
+
 ### Phase 16: Plants and growing ecosystems
 
 Plants grow renewable energy, regrow after grazing, age out, and spread
@@ -162,7 +172,8 @@ creaturecreator/
 │   │   └── plant.js          # Growing, edible, seed-spreading plant
 │   │
 │   ├── genetics/
-│   │   ├── genome.js         # Genetic representation and neural policy weights
+│   │   │   ├── genome.js     # Genetic representation and neural policy weights
+│   │   │   ├── phenotype.js  # Bounded derived body plan and visual state
 │   │   ├── mutation.js       # Mutation rules
 │   │   └── reproduction.js   # Birth logic
 │   │
@@ -191,7 +202,8 @@ creaturecreator/
 │   ├── PHASE18.md            # Environmental events and diversity notes
 │   ├── PHASE19.md            # Persistence and population history notes
 │   ├── PHASE20.md            # Experiment controls and live analytics notes
-│   └── PHASE21.md            # Ecosystem balance controls and resource analytics
+│   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
+│   └── PHASE27.md            # Heritable phenotypes and body-plan rendering
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -262,6 +274,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 20 (Experiment controls and live analytics)
+**Current Phase:** 27 (Heritable phenotypes and body plans)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim
