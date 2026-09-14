@@ -4,6 +4,7 @@
  */
 
 import { SpatialGrid } from './utils/spatialGrid.js';
+import { Creature } from './entities/creature.js';
 
 export class World {
     constructor(width = 3000, height = 3000) {
@@ -23,6 +24,7 @@ export class World {
             foodSpawnRate: 2.0,        // food per second
             foodEnergy: 50,            // energy per food item
             maxFood: 500,              // maximum food items
+            maxCreatures: 180,
             worldSize: width,          // for UI reference
         };
 
@@ -33,6 +35,13 @@ export class World {
 
         // Spawning accumulator
         this.foodSpawnAccumulator = 0;
+        this.pendingBirths = [];
+        this.nextFoodId = 1;
+        this.births = 0;
+        this.deaths = 0;
+        this.maxGeneration = 0;
+        this.settings.maxAge = 180;
+        this.settings.mutationRate = 0.08;
     }
 
     /**
@@ -41,19 +50,29 @@ export class World {
     update(deltaTime, simulationSpeed = 1) {
         this.deltaTime = deltaTime * simulationSpeed;
         this.time += this.deltaTime;
+        this.rebuildSpatialGrid();
 
         // Spawn new food
         this.updateFoodSpawning();
 
         // Update creatures (will be implemented in creature class)
-        for (const creature of this.creatures) {
+        for (const creature of [...this.creatures]) {
             if (creature.update) {
                 creature.update(deltaTime * simulationSpeed, this);
             }
         }
 
         // Remove dead creatures
-        this.creatures = this.creatures.filter(c => c.alive !== false);
+        const living = [];
+        for (const creature of this.creatures) {
+            if (creature.alive !== false) living.push(creature);
+            else this.deaths += 1;
+        }
+        this.creatures = living;
+        for (const child of this.pendingBirths.splice(0)) {
+            this.addCreature(new Creature(child.x, child.y, child));
+            this.births += 1;
+        }
 
         // Rebuild spatial grid for proximity queries
         this.rebuildSpatialGrid();
@@ -87,7 +106,7 @@ export class World {
             x: Math.random() * this.width,
             y: Math.random() * this.height,
             energy: this.settings.foodEnergy,
-            id: Math.random()
+            id: this.nextFoodId++
         };
 
         this.food.push(food);
@@ -100,6 +119,13 @@ export class World {
         creature.x = Math.max(0, Math.min(this.width, creature.x));
         creature.y = Math.max(0, Math.min(this.height, creature.y));
         this.creatures.push(creature);
+        this.maxGeneration = Math.max(this.maxGeneration, creature.generation);
+    }
+
+    queueBirth(child) {
+        if (this.creatures.length + this.pendingBirths.length < this.settings.maxCreatures) {
+            this.pendingBirths.push(child);
+        }
     }
 
     /**
@@ -115,12 +141,25 @@ export class World {
      * Get nearby entities for proximity queries
      */
     getNearby(x, y, radius, type = 'all') {
-        const candidates = this.spatialGrid.getNearby(x, y, radius);
+        const candidates = [];
+        const seen = new Set();
+        for (const offsetX of [-this.width, 0, this.width]) {
+            for (const offsetY of [-this.height, 0, this.height]) {
+                for (const entity of this.spatialGrid.getNearby(x + offsetX, y + offsetY, radius)) {
+                    if (!seen.has(entity)) {
+                        seen.add(entity);
+                        candidates.push(entity);
+                    }
+                }
+            }
+        }
         const result = [];
 
         for (const entity of candidates) {
-            const dx = entity.x - x;
-            const dy = entity.y - y;
+            let dx = entity.x - x;
+            let dy = entity.y - y;
+            if (Math.abs(dx) > this.width / 2) dx -= Math.sign(dx) * this.width;
+            if (Math.abs(dy) > this.height / 2) dy -= Math.sign(dy) * this.height;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < radius) {
@@ -187,7 +226,10 @@ export class World {
             creatures: this.creatures.length,
             food: this.food.length,
             time: this.time,
-            tick: this.tick
+            tick: this.tick,
+            generation: this.maxGeneration,
+            births: this.births,
+            deaths: this.deaths
         };
     }
 
@@ -200,6 +242,10 @@ export class World {
         this.time = 0;
         this.tick = 0;
         this.foodSpawnAccumulator = 0;
+        this.pendingBirths = [];
+        this.births = 0;
+        this.deaths = 0;
+        this.maxGeneration = 0;
         this.spatialGrid.clear();
     }
 }

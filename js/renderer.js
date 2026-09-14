@@ -19,6 +19,7 @@ export class Renderer {
         // Rendering options
         this.showGrid = false;
         this.showStats = false;
+        this.selectedCreature = null;
 
         this.handleResize();
         window.addEventListener('resize', () => this.handleResize());
@@ -175,6 +176,13 @@ export class Renderer {
         this.ctx.stroke();
 
         this.ctx.restore();
+        if (creature === this.selectedCreature) {
+            this.ctx.strokeStyle = '#facc15';
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(screen.x, screen.y, size + 8, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
     }
 
     /**
