@@ -369,6 +369,140 @@ export class World {
     }
 
     /**
+     * Return a JSON-safe snapshot. Pending work is deliberately excluded:
+     * it contains live class instances and is recreated by the next update.
+     */
+    serialize() {
+        return {
+            version: 1,
+            width: this.width,
+            height: this.height,
+            settings: { ...this.settings },
+            time: this.time,
+            tick: this.tick,
+            foodSpawnAccumulator: this.foodSpawnAccumulator,
+            plantSeedAccumulator: this.plantSeedAccumulator,
+            nextFoodId: this.nextFoodId,
+            births: this.births,
+            deaths: this.deaths,
+            predationKills: this.predationKills,
+            maxGeneration: this.maxGeneration,
+            nextEventAt: this.nextEventAt,
+            event: this.event ? { ...this.event, effects: { ...this.event.effects } } : null,
+            eventHistory: [...this.eventHistory],
+            creatures: this.creatures.map(creature => ({
+                id: creature.id, x: creature.x, y: creature.y,
+                genome: { ...creature.genome, neuralWeights: { ...creature.genome.neuralWeights } },
+                energy: creature.energy, age: creature.age, generation: creature.generation,
+                parentId: creature.parentId, lineageId: creature.lineageId,
+                rotation: creature.rotation, alive: creature.alive,
+                attackCooldown: creature.attackCooldown,
+                reproductionCooldown: creature.reproductionCooldown,
+                deathCause: creature.deathCause || null,
+                behaviorStats: { ...creature.behaviorStats }
+            })),
+            plants: this.plants.map(plant => ({
+                id: plant.id, x: plant.x, y: plant.y, age: plant.age,
+                energy: plant.energy, maxEnergy: plant.maxEnergy,
+                growthRate: plant.growthRate, lifespan: plant.lifespan,
+                seedTimer: plant.seedTimer, seedInterval: plant.seedInterval,
+                alive: plant.alive, zoneType: plant.zoneType
+            })),
+            food: this.food.map(food => ({ x: food.x, y: food.y, energy: food.energy, id: food.id }))
+        };
+    }
+
+    /**
+     * Restore a validated snapshot in place so renderer references remain valid.
+     */
+    loadSnapshot(snapshot) {
+        if (!snapshot || snapshot.version !== 1 ||
+            !Number.isFinite(snapshot.width) || !Number.isFinite(snapshot.height) ||
+            snapshot.width <= 0 || snapshot.height <= 0 ||
+            !Array.isArray(snapshot.creatures) || !Array.isArray(snapshot.plants) ||
+            !Array.isArray(snapshot.food)) {
+            throw new Error('Unsupported or malformed simulation snapshot.');
+        }
+        if (snapshot.creatures.length > 2000 || snapshot.plants.length > 5000 ||
+            snapshot.food.length > 10000) {
+            throw new Error('Snapshot contains too many entities.');
+        }
+        for (const creature of snapshot.creatures) {
+            if (!creature || !Number.isFinite(Number(creature.x)) ||
+                !Number.isFinite(Number(creature.y)) || !creature.genome ||
+                typeof creature.genome !== 'object') {
+                throw new Error('Invalid creature in snapshot.');
+            }
+        }
+        for (const plant of snapshot.plants) {
+            if (!plant || !Number.isFinite(Number(plant.x)) || !Number.isFinite(Number(plant.y))) {
+                throw new Error('Invalid plant in snapshot.');
+            }
+        }
+        for (const food of snapshot.food) {
+            if (!food || !Number.isFinite(Number(food.x)) || !Number.isFinite(Number(food.y)) ||
+                !Number.isFinite(Number(food.energy))) {
+                throw new Error('Invalid food in snapshot.');
+            }
+        }
+        if (snapshot.event !== null && snapshot.event !== undefined &&
+            (!snapshot.event.effects || typeof snapshot.event.effects !== 'object')) {
+            throw new Error('Invalid environmental event in snapshot.');
+        }
+        const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+        this.width = snapshot.width;
+        this.height = snapshot.height;
+        this.zones = createZones(this.width, this.height);
+        this.spatialGrid = new SpatialGrid(this.width, this.height, 200);
+        this.settings = { ...this.settings, ...(snapshot.settings || {}), worldSize: this.width };
+        this.time = Math.max(0, finite(snapshot.time));
+        this.tick = Math.max(0, Math.floor(finite(snapshot.tick)));
+        this.foodSpawnAccumulator = Math.max(0, finite(snapshot.foodSpawnAccumulator));
+        this.plantSeedAccumulator = Math.max(0, finite(snapshot.plantSeedAccumulator));
+        this.nextFoodId = Math.max(1, Math.floor(finite(snapshot.nextFoodId, 1)));
+        this.births = Math.max(0, Math.floor(finite(snapshot.births)));
+        this.deaths = Math.max(0, Math.floor(finite(snapshot.deaths)));
+        this.predationKills = Math.max(0, Math.floor(finite(snapshot.predationKills)));
+        this.maxGeneration = Math.max(0, Math.floor(finite(snapshot.maxGeneration)));
+        this.nextEventAt = Math.max(this.time, finite(snapshot.nextEventAt, this.time + 45));
+        this.event = snapshot.event && typeof snapshot.event === 'object' ? { ...snapshot.event } : null;
+        this.eventHistory = Array.isArray(snapshot.eventHistory) ? snapshot.eventHistory.slice(-100) : [];
+        this.pendingBirths = [];
+        this.pendingPlantSeeds = [];
+        this.creatures = snapshot.creatures.map(data => {
+            if (!data || !Number.isFinite(Number(data.x)) || !Number.isFinite(Number(data.y)) ||
+                !data.genome || typeof data.genome !== 'object') throw new Error('Invalid creature in snapshot.');
+            const creature = new Creature(Number(data.x), Number(data.y), {
+                id: data.id, genome: data.genome, energy: finite(data.energy),
+                age: finite(data.age), generation: finite(data.generation),
+                parentId: data.parentId, lineageId: data.lineageId
+            });
+            creature.rotation = finite(data.rotation);
+            creature.alive = data.alive !== false;
+            creature.attackCooldown = Math.max(0, finite(data.attackCooldown));
+            creature.reproductionCooldown = Math.max(0, finite(data.reproductionCooldown));
+            creature.deathCause = data.deathCause || null;
+            creature.behaviorStats = { ...creature.behaviorStats, ...(data.behaviorStats || {}) };
+            return creature;
+        });
+        this.plants = snapshot.plants.map(data => {
+            if (!data || !Number.isFinite(Number(data.x)) || !Number.isFinite(Number(data.y))) {
+                throw new Error('Invalid plant in snapshot.');
+            }
+            const plant = new Plant(Number(data.x), Number(data.y), data);
+            plant.alive = data.alive !== false;
+            return plant;
+        });
+        this.food = snapshot.food.map(data => {
+            if (!data || !Number.isFinite(Number(data.x)) || !Number.isFinite(Number(data.y)) ||
+                !Number.isFinite(Number(data.energy))) throw new Error('Invalid food in snapshot.');
+            return { x: Number(data.x), y: Number(data.y), energy: Number(data.energy),
+                id: data.id, isFood: true };
+        });
+        this.rebuildSpatialGrid();
+    }
+
+    /**
      * Reset world to initial state
      */
     reset() {

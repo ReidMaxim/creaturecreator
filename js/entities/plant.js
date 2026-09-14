@@ -5,6 +5,7 @@ let nextPlantId = 1;
 export class Plant {
     constructor(x, y, options = {}) {
         this.id = options.id || nextPlantId++;
+        if (Number.isFinite(Number(options.id))) nextPlantId = Math.max(nextPlantId, Number(options.id) + 1);
         this.x = x;
         this.y = y;
         this.age = options.age || 0;

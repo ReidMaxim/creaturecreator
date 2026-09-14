@@ -9,6 +9,7 @@ let nextCreatureId = 1;
 export class Creature {
     constructor(x, y, options = {}) {
         this.id = options.id || nextCreatureId++;
+        if (Number.isFinite(Number(options.id))) nextCreatureId = Math.max(nextCreatureId, Number(options.id) + 1);
         this.x = x;
         this.y = y;
         this.genome = options.genome instanceof Genome ? options.genome : new Genome(options.genome);

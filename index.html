@@ -96,6 +96,25 @@
                 </div>
             </div>
 
+            <div id="persistence" class="panel persistence-panel">
+                <div class="panel-heading">Simulation data</div>
+                <div class="button-row">
+                    <button id="saveBtn" class="btn">Save</button>
+                    <button id="loadBtn" class="btn">Load</button>
+                    <button id="exportBtn" class="btn">Export JSON</button>
+                    <button id="importBtn" class="btn">Import</button>
+                    <input id="importFile" type="file" accept="application/json,.json" hidden>
+                </div>
+                <textarea id="snapshotText" rows="3" placeholder="Paste a Creature Creator JSON export here"></textarea>
+                <span id="persistenceStatus" class="persistence-status" role="status"></span>
+            </div>
+
+            <div id="historyPanel" class="panel history-panel">
+                <div class="panel-heading">Population history</div>
+                <canvas id="historyCanvas" width="240" height="90"></canvas>
+                <div class="history-legend"><i></i> creatures <i></i> plants <i></i> predators</div>
+            </div>
+
             <!-- Bottom Left: Camera Info -->
             <div id="cameraInfo" class="panel bottom-left">
                 <div class="stat-row">

@@ -13,8 +13,11 @@ const state = {
     lastFrame: performance.now(),
     fps: 0,
     fpsTimer: 0,
-    frameCount: 0
+    frameCount: 0,
+    historyTimer: 0,
+    history: []
 };
+const STORAGE_KEY = 'creature-creator-phase19-save';
 
 for (let index = 0; index < 24; index += 1) {
     world.addCreature(new Creature(
@@ -65,7 +68,136 @@ const elements = {
     inspector: document.getElementById('inspector'),
     inspectorBody: document.getElementById('inspectorBody'),
     closeInspector: document.getElementById('closeInspector')
+    ,save: document.getElementById('saveBtn'),
+    load: document.getElementById('loadBtn'),
+    export: document.getElementById('exportBtn'),
+    import: document.getElementById('importBtn'),
+    importFile: document.getElementById('importFile'),
+    snapshotText: document.getElementById('snapshotText'),
+    persistenceStatus: document.getElementById('persistenceStatus'),
+    historyCanvas: document.getElementById('historyCanvas')
 };
+
+function snapshot() {
+    return {
+        app: 'creature-creator',
+        version: 1,
+        savedAt: new Date().toISOString(),
+        world: world.serialize(),
+        camera: { ...renderer.camera },
+        speed: state.speed
+    };
+}
+
+function setPersistenceStatus(message, error = false) {
+    elements.persistenceStatus.textContent = message;
+    elements.persistenceStatus.style.color = error ? '#fca5a5' : '#86efac';
+}
+
+function applySnapshot(data) {
+    if (!data || data.app !== 'creature-creator' || data.version !== 1 || !data.world) {
+        throw new Error('This is not a Creature Creator Phase 19 save.');
+    }
+    world.loadSnapshot(data.world);
+    if (data.camera && Number.isFinite(data.camera.x) && Number.isFinite(data.camera.y)) {
+        renderer.setCameraPosition(data.camera.x, data.camera.y);
+        if (Number.isFinite(data.camera.zoom)) renderer.setCameraZoom(data.camera.zoom);
+    }
+    if (Number.isFinite(data.speed)) {
+        state.speed = Math.max(0.25, Math.min(10, data.speed));
+        elements.speed.value = String(state.speed);
+    }
+    for (const [input, key] of [[elements.foodSpawnRate, 'foodSpawnRate'],
+        [elements.foodEnergy, 'foodEnergy'], [elements.maxFood, 'maxFood'],
+        [elements.plantSpawnRate, 'plantSpawnRate']]) {
+        input.value = world.settings[key];
+        input.dispatchEvent(new Event('input'));
+    }
+    renderer.selectedCreature = null;
+    inspectCreature(null);
+    state.history = [];
+    updateHud();
+}
+
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot()));
+        setPersistenceStatus('Saved locally.');
+    } catch (error) {
+        setPersistenceStatus(`Save failed: ${error.message}`, true);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) throw new Error('No local save found.');
+        applySnapshot(JSON.parse(raw));
+        setPersistenceStatus('Loaded local save.');
+    } catch (error) {
+        setPersistenceStatus(`Load failed: ${error.message}`, true);
+    }
+}
+
+function exportSnapshot() {
+    const text = JSON.stringify(snapshot(), null, 2);
+    elements.snapshotText.value = text;
+    const blob = new Blob([text], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `creature-creator-${world.tick}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    setPersistenceStatus('JSON export ready.');
+}
+
+function importSnapshot(text) {
+    try {
+        applySnapshot(JSON.parse(text));
+        setPersistenceStatus('Imported simulation.');
+    } catch (error) {
+        setPersistenceStatus(`Import failed: ${error.message}`, true);
+    }
+}
+
+elements.save.addEventListener('click', saveToLocalStorage);
+elements.load.addEventListener('click', loadFromLocalStorage);
+elements.export.addEventListener('click', exportSnapshot);
+elements.import.addEventListener('click', () => {
+    if (elements.snapshotText.value.trim()) importSnapshot(elements.snapshotText.value);
+    else elements.importFile.click();
+});
+elements.importFile.addEventListener('change', () => {
+    const file = elements.importFile.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => importSnapshot(reader.result);
+    reader.onerror = () => setPersistenceStatus('Import failed: could not read file.', true);
+    reader.readAsText(file);
+    elements.importFile.value = '';
+});
+
+function drawHistory() {
+    const canvasElement = elements.historyCanvas;
+    const context = canvasElement.getContext('2d');
+    const width = canvasElement.width;
+    const height = canvasElement.height;
+    context.clearRect(0, 0, width, height);
+    if (state.history.length < 2) return;
+    const max = Math.max(1, ...state.history.map(point =>
+        Math.max(point.creatures, point.plants, point.predators)));
+    for (const [key, color] of [['creatures', '#4ade80'], ['plants', '#a3e635'], ['predators', '#fb923c']]) {
+        context.strokeStyle = color;
+        context.lineWidth = 1.5;
+        context.beginPath();
+        state.history.forEach((point, index) => {
+            const x = index * width / (state.history.length - 1);
+            const y = height - point[key] / max * (height - 6) - 3;
+            if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+        });
+        context.stroke();
+    }
+}
 
 function updateHud() {
     const stats = world.getStats();
@@ -217,6 +349,14 @@ function frame(now) {
     state.lastFrame = now;
     if (state.running) {
         world.update(deltaTime, state.speed);
+        state.historyTimer += deltaTime * state.speed;
+        if (state.historyTimer >= 1) {
+            state.historyTimer = 0;
+            const stats = world.getStats();
+            state.history.push({ creatures: stats.creatures, plants: stats.plants, predators: stats.predators });
+            if (state.history.length > 120) state.history.shift();
+            drawHistory();
+        }
     }
     updateCamera(deltaTime);
     renderer.draw(world);

@@ -89,6 +89,78 @@ canvas {
     line-height: 1.7;
 }
 
+.persistence-panel {
+    top: 175px;
+    right: 20px;
+    min-width: 280px;
+    max-width: 340px;
+}
+
+.history-panel {
+    bottom: 80px;
+    left: 205px;
+    padding: 10px;
+    gap: 5px;
+}
+
+.panel-heading {
+    color: #facc15;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.button-row .btn {
+    padding: 6px 8px;
+    font-size: 10px;
+}
+
+#snapshotText {
+    width: 100%;
+    resize: vertical;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    background: rgba(0,0,0,0.25);
+    color: #dbeafe;
+    font: 11px monospace;
+    padding: 5px;
+}
+
+.persistence-status {
+    min-height: 13px;
+    color: #86efac;
+    font-size: 10px;
+}
+
+#historyCanvas {
+    width: 240px;
+    height: 90px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+}
+
+.history-legend {
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.history-legend i {
+    display: inline-block;
+    width: 12px;
+    border-top: 2px solid #4ade80;
+    margin: 0 3px 3px 7px;
+}
+
+.history-legend i:nth-of-type(2) { border-color: #a3e635; }
+.history-legend i:nth-of-type(3) { border-color: #fb923c; }
+
 .inspector.hidden {
     display: none;
 }
