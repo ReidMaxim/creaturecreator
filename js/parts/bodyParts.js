@@ -2,7 +2,7 @@
  * Convert inherited part genes into the functional body plan used by a creature.
  * Keeping this derived data separate means rendering and simulation use the same traits.
  */
-export function createBodyParts(genome) {
+export function createBodyParts(genome, phenotype = null) {
     const part = (count, strength) => ({
         count: Math.max(0, Math.round(count)),
         strength: Math.max(0, Math.min(1, strength))
@@ -30,7 +30,8 @@ export function createBodyParts(genome) {
         bite: genome.mouthCount
             ? Math.min(1.5, genome.attack * (0.35 + genome.mouthCount * genome.mouthStrength * 0.45))
             : 0,
-        defense: Math.min(1.5, genome.defense * (0.6 + genome.size / 30)),
+        defense: Math.min(1.5, genome.defense * (0.6 + genome.size / 30)
+            + (phenotype ? phenotype.armor * 0.22 : 0)),
         agility: Math.min(1.5, genome.agility * (0.65 + motor.count * motor.strength * 0.18))
     };
 }

@@ -335,6 +335,13 @@ function inspectCreature(creature) {
         <div class="creature-swatch" style="background:${creature.color}"></div>
         <strong>#${creature.id}</strong> &middot; generation ${creature.generation}<br>
         Age ${creature.age.toFixed(1)}s &middot; energy ${creature.energy.toFixed(0)}<br>
+        Visual state: <strong>${creature.visualState || 'stable'}</strong>
+        &middot; silhouette ${['round', 'oval', 'diamond', 'ribbon'][creature.phenotype?.shape || 0]}
+        &middot; growth ${(creature.phenotype?.growth * 100 || 100).toFixed(0)}%<br>
+        Geometry ${(creature.phenotype?.width || 1).toFixed(2)}w × ${(creature.phenotype?.length || 1).toFixed(2)}l
+        &middot; taper ${(creature.phenotype?.taper || 1).toFixed(2)}
+        &middot; pattern ${creature.phenotype?.pattern || 0}
+        &middot; armor ${(creature.phenotype?.armor * 100 || 0).toFixed(0)}%<br>
         Size ${creature.genome.size.toFixed(1)} &middot; speed ${creature.genome.speed.toFixed(1)}<br>
         Metabolism ${(creature.genome.metabolism + creature.parts.metabolicCost).toFixed(2)}
         &middot; vision ${creature.parts.vision.toFixed(0)}<br>

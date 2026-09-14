@@ -3,6 +3,7 @@ import { makeChild } from '../genetics/reproduction.js';
 import { randomAngle, randomFloat } from '../utils/random.js';
 import { createBodyParts } from '../parts/bodyParts.js';
 import { DecisionBrain } from '../brain/brain.js';
+import { derivePhenotype, phenotypeState } from '../genetics/phenotype.js';
 
 let nextCreatureId = 1;
 
@@ -13,20 +14,23 @@ export class Creature {
         this.x = x;
         this.y = y;
         this.genome = options.genome instanceof Genome ? options.genome : new Genome(options.genome);
-        this.parts = createBodyParts(this.genome);
+        this.age = options.age || 0;
+        this.phenotype = derivePhenotype(this.genome);
+        this.phenotype.growth = 0.72 + Math.min(1,
+            this.age / Math.max(1, this.genome.reproductionAge)) * 0.28;
+        this.parts = createBodyParts(this.genome, this.phenotype);
         this.brain = new DecisionBrain(this.genome);
-        this.size = this.genome.size;
+        this.size = this.phenotype.radius;
         this.speed = this.genome.speed * this.parts.movementFactor * (0.82 + this.parts.agility * 0.18);
         this.maxEnergy = this.genome.maxEnergy;
         this.energy = options.energy ?? randomFloat(this.maxEnergy * 0.7, this.maxEnergy);
-        this.age = options.age || 0;
         this.generation = options.generation || 0;
         this.parentId = options.parentId || null;
         this.lineageId = options.lineageId || this.parentId || this.id;
         this.rotation = randomAngle();
         this.alive = true;
         this.isCreature = true;
-        this.color = `hsl(${Math.round(this.genome.hue)} 75% 60%)`;
+        this.color = this.phenotype.color;
         this.isPredator = this.genome.diet >= 0.52;
         this.attackCooldown = 0;
         this.reproductionCooldown = 0;
@@ -36,10 +40,13 @@ export class Creature {
             distanceTravelled: 0,
             decisions: 0
         };
+        this.visualState = phenotypeState(this);
     }
 
     update(deltaTime, world) {
         this.age += deltaTime;
+        this.phenotype.growth = Math.min(1, this.phenotype.growth + deltaTime
+            / Math.max(1, this.genome.reproductionAge * 8));
         this.reproductionCooldown = Math.max(0, this.reproductionCooldown - deltaTime);
         this.attackCooldown = Math.max(0, this.attackCooldown - deltaTime);
         const zone = world.getZoneAt(this.x, this.y);
@@ -48,10 +55,12 @@ export class Creature {
             * zone.energyDrain * effects.energyDrain * (world.settings.resourcePressure || 1);
         if (this.energy <= 0 || this.age >= world.settings.maxAge) {
             this.alive = false;
+            this.visualState = 'dead';
             return;
         }
 
         const action = this.brain.decide(this, world, deltaTime);
+        this.visualState = phenotypeState(this);
         this.behaviorStats.decisions += 1;
         this.rotation += action.turn * (1.8 + this.genome.persistence * 0.35) * deltaTime;
 
