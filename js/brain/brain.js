@@ -37,8 +37,12 @@ export class DecisionBrain {
             foodDirection: Math.sin(foodAngle) * ((creature.isPredator || fleeing)
                 ? (senses.preyVisible || senses.threatVisible ? 1 : 0)
                 : senses.foodVisible ? 1 : 0)
-                * (creature.isPredator ? this.genome.diet : fleeing ? this.genome.defense : this.genome.foodAttraction),
-            foodDistance: targetSignal * (creature.isPredator ? this.genome.diet : this.genome.foodAttraction),
+                * (creature.isPredator ? this.genome.diet
+                    : fleeing ? this.genome.defense
+                    : senses.carcassVisible ? this.genome.scavenging : this.genome.foodAttraction),
+            foodDistance: targetSignal * (creature.isPredator
+                ? this.genome.diet
+                : senses.carcassVisible ? this.genome.scavenging : this.genome.foodAttraction),
             energyUrgency: urgency,
             wander: this.wanderDirection * this.genome.wander
                 * (1 + ageFactor * 0.25)                 * (1 - targetSignal * 0.75),

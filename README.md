@@ -64,6 +64,7 @@ python -m http.server 8000
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
 | 22 | Optional sexual reproduction and heritable genome recombination | ✅ Complete |
+| 23 | Advanced ecology: carcass scavenging and bounded omnivory | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -116,12 +117,19 @@ long-running outcomes are measurable. See [`docs/PHASE21.md`](./docs/PHASE21.md)
 
 ### Phase 22: Optional sexual reproduction
 
-The reproduction control can switch between the compatible legacy asexual
-mode and sexual mating. Sexual mates seek compatible nearby partners, pay
-bounded costs, observe cooldowns, and produce deferred offspring with
-recombined genomes, mutation, and two-parent metadata. The HUD and inspector
-expose the active mode and ancestry. See
-[`docs/PHASE22.md`](./docs/PHASE22.md).
+The reproduction control can switch between compatible legacy asexual mode and
+sexual mating. Sexual mates seek compatible nearby partners, pay bounded costs,
+observe cooldowns, and produce deferred offspring with recombined genomes,
+mutation, and two-parent metadata. The HUD and inspector expose active mode and
+ancestry. See [`docs/PHASE22.md`](./docs/PHASE22.md).
+
+### Phase 23: Advanced ecology
+
+Creatures now inherit bounded scavenging affinity and can sense and consume
+short-lived carcasses left by deaths. Recovered energy, carcass counts, and
+the scavenging trait are visible in the HUD, renderer, inspector, and
+version-1 persistence snapshots. Existing plant feeding and predator attacks
+remain unchanged. See [`docs/PHASE23.md`](./docs/PHASE23.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -201,8 +209,7 @@ creaturecreator/
 │   ├── PHASE18.md            # Environmental events and diversity notes
 │   ├── PHASE19.md            # Persistence and population history notes
 │   ├── PHASE20.md            # Experiment controls and live analytics notes
-│   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
-│   └── PHASE22.md            # Optional sexual reproduction and recombination
+│   └── PHASE21.md            # Ecosystem balance controls and resource analytics
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -273,6 +280,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 22 (Optional sexual reproduction)
+**Current Phase:** 23 (Advanced ecology)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

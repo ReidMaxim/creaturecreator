@@ -42,6 +42,8 @@ const elements = {
     reproductionModeDisplay: document.getElementById('reproductionModeDisplay'),
     foodCount: document.getElementById('foodCount'),
     plantCount: document.getElementById('plantCount'),
+    carcassCount: document.getElementById('carcassCount'),
+    scavengedEnergy: document.getElementById('scavengedEnergy'),
     plantEnergy: document.getElementById('plantEnergy'),
     averageFitness: document.getElementById('averageFitness'),
     diversity: document.getElementById('diversity'),
@@ -293,6 +295,8 @@ function updateHud() {
     elements.reproductionModeDisplay.textContent = stats.reproductionMode;
     elements.foodCount.textContent = stats.food;
     elements.plantCount.textContent = stats.plants;
+    elements.carcassCount.textContent = stats.carcasses;
+    elements.scavengedEnergy.textContent = Math.round(stats.scavengedEnergy);
     elements.plantEnergy.textContent = Math.round(stats.plantEnergy);
     elements.averageFitness.textContent = stats.averageFitness.toFixed(1);
     elements.diversity.textContent = `${stats.species} / ${stats.lineages}`;
@@ -355,6 +359,8 @@ function inspectCreature(creature) {
         &middot; movement ${(creature.parts.movementFactor * 100).toFixed(0)}%<br>
         Plants ${(creature.genome.plantPreference * 100).toFixed(0)}% preference
         &middot; efficiency ${(creature.genome.plantEfficiency * 100).toFixed(0)}%<br>
+        Scavenging ${(creature.genome.scavenging * 100).toFixed(0)}%
+        &middot; recovered ${creature.behaviorStats.scavengedEnergy.toFixed(1)} energy<br>
         Diet ${creature.isPredator ? 'carnivore' : 'herbivore'}
         (${(creature.genome.diet * 100).toFixed(0)}%) &middot;
         attack ${(creature.parts.bite).toFixed(2)} &middot;

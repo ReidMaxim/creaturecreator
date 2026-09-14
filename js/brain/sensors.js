@@ -14,15 +14,19 @@ export function senseCreature(creature, world) {
     if (vision > 0) {
         const foodCandidates = [
             ...world.getNearby(creature.x, creature.y, vision, 'plants'),
-            ...world.getNearby(creature.x, creature.y, vision, 'food')
+            ...world.getNearby(creature.x, creature.y, vision, 'food'),
+            ...world.getNearby(creature.x, creature.y, vision, 'carcasses')
         ];
         for (const candidate of foodCandidates) {
             const { dx, dy } = toroidalDelta(creature, candidate, world);
-            const distance = Math.hypot(dx, dy)
-                * (candidate.isPlant ? (1 - creature.genome.plantPreference * 0.35) : 1);
+            const attraction = candidate.isPlant
+                ? (1 - creature.genome.plantPreference * 0.35)
+                : candidate.isCarcass ? (1.15 - creature.genome.scavenging * 0.45) : 1;
+            const distance = Math.hypot(dx, dy) * attraction;
             if (distance < nearestDistance) {
                 nearestDistance = distance;
-                food = { direction: Math.atan2(dy, dx), distance, isPlant: candidate.isPlant };
+                food = { direction: Math.atan2(dy, dx), distance,
+                    isPlant: candidate.isPlant, isCarcass: candidate.isCarcass };
             }
         }
     }
@@ -57,6 +61,7 @@ export function senseCreature(creature, world) {
         threatVisible: Boolean(threat),
         energy: creature.energy / creature.maxEnergy,
         age: creature.age / Math.max(world.settings.maxAge, 1),
-        plantVisible: Boolean(food && food.isPlant)
+        plantVisible: Boolean(food && food.isPlant),
+        carcassVisible: Boolean(food && food.isCarcass)
     };
 }

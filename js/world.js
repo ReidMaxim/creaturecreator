@@ -40,6 +40,7 @@ export class World {
         this.creatures = [];
         this.food = [];
         this.plants = [];
+        this.carcasses = [];
 
         // Spatial optimization
         this.spatialGrid = new SpatialGrid(width, height, 200);
@@ -100,6 +101,7 @@ export class World {
         // Spawn new food
         this.updateFoodSpawning();
         this.updatePlants();
+        this.updateCarcasses();
 
         // Update creatures (will be implemented in creature class)
         for (const creature of [...this.creatures]) {
@@ -112,10 +114,14 @@ export class World {
         const living = [];
         for (const creature of this.creatures) {
             if (creature.alive !== false) living.push(creature);
-            else this.deaths += 1;
+            else {
+                this.deaths += 1;
+                this.spawnCarcass(creature);
+            }
         }
         this.creatures = living;
         this.plants = this.plants.filter(plant => plant.alive);
+        this.carcasses = this.carcasses.filter(carcass => carcass.alive);
         for (const child of this.pendingBirths.splice(0)) {
             this.addCreature(new Creature(child.x, child.y, child));
             this.births += 1;
@@ -136,9 +142,40 @@ export class World {
             this.spawnPlant();
             this.plantSeedAccumulator -= 1;
         }
+
         for (const plant of [...this.plants]) {
             if (plant.alive) plant.update(this.deltaTime, this);
         }
+    }
+
+    updateCarcasses() {
+        for (const carcass of this.carcasses) {
+            carcass.age += this.deltaTime;
+            carcass.energy = Math.max(0, carcass.energy - this.deltaTime * 0.35);
+            if (carcass.age >= carcass.lifespan || carcass.energy <= 0) carcass.alive = false;
+        }
+    }
+
+    spawnCarcass(creature) {
+        if (creature.carcassSpawned) return;
+        creature.carcassSpawned = true;
+        const energy = Math.max(8, creature.maxEnergy * 0.42);
+        this.carcasses.push({
+            x: creature.x, y: creature.y, energy, maxEnergy: energy,
+            age: 0, lifespan: 28 + creature.size,
+            id: `carcass-${creature.id}-${this.tick}`,
+            isCarcass: true, alive: true,
+            consume(amount) {
+                const eaten = Math.min(this.energy, Math.max(0, amount));
+                this.energy -= eaten;
+                if (this.energy <= 0.1) this.alive = false;
+                return eaten;
+            }
+        });
+    }
+
+    removeCarcass(index) {
+        if (index >= 0 && index < this.carcasses.length) this.carcasses.splice(index, 1);
     }
 
     /**
@@ -285,6 +322,8 @@ export class World {
                     result.push(entity);
                 } else if (type === 'plants' && entity.isPlant) {
                     result.push(entity);
+                } else if (type === 'carcasses' && entity.isCarcass) {
+                    result.push(entity);
                 }
             }
         }
@@ -354,6 +393,7 @@ export class World {
             this.spatialGrid.insert(food);
         }
         for (const plant of this.plants) this.spatialGrid.insert(plant);
+        for (const carcass of this.carcasses) this.spatialGrid.insert(carcass);
     }
 
     /**
@@ -411,6 +451,10 @@ export class World {
             creatures: this.creatures.length,
             food: this.food.length,
             plants: this.plants.length,
+            carcasses: this.carcasses.length,
+            scavengedEnergy: this.creatures.reduce(
+                (sum, creature) => sum + creature.behaviorStats.scavengedEnergy, 0
+            ),
             plantEnergy: this.plants.reduce((sum, plant) => sum + plant.energy, 0),
             time: this.time,
             tick: this.tick,
@@ -485,6 +529,11 @@ export class World {
                 seedTimer: plant.seedTimer, seedInterval: plant.seedInterval,
                 alive: plant.alive, zoneType: plant.zoneType
             })),
+            carcasses: this.carcasses.map(carcass => ({
+                id: carcass.id, x: carcass.x, y: carcass.y, energy: carcass.energy,
+                maxEnergy: carcass.maxEnergy, age: carcass.age, lifespan: carcass.lifespan,
+                alive: carcass.alive
+            })),
             food: this.food.map(food => ({ x: food.x, y: food.y, energy: food.energy, id: food.id }))
         };
     }
@@ -497,7 +546,8 @@ export class World {
             !Number.isFinite(snapshot.width) || !Number.isFinite(snapshot.height) ||
             snapshot.width <= 0 || snapshot.height <= 0 ||
             !Array.isArray(snapshot.creatures) || !Array.isArray(snapshot.plants) ||
-            !Array.isArray(snapshot.food)) {
+            !Array.isArray(snapshot.food) || (snapshot.carcasses !== undefined &&
+                !Array.isArray(snapshot.carcasses))) {
             throw new Error('Unsupported or malformed simulation snapshot.');
         }
         if (snapshot.creatures.length > 2000 || snapshot.plants.length > 5000 ||
@@ -579,6 +629,18 @@ export class World {
             plant.alive = data.alive !== false;
             return plant;
         });
+        this.carcasses = (snapshot.carcasses || []).map(data => ({
+            id: data.id, x: Number(data.x), y: Number(data.y), energy: Number(data.energy),
+            maxEnergy: Number(data.maxEnergy) || Number(data.energy), age: finite(data.age),
+            lifespan: Math.max(1, finite(data.lifespan, 30)), alive: data.alive !== false,
+            isCarcass: true,
+            consume(amount) {
+                const eaten = Math.min(this.energy, Math.max(0, amount));
+                this.energy -= eaten;
+                if (this.energy <= 0.1) this.alive = false;
+                return eaten;
+            }
+        }));
         this.food = snapshot.food.map(data => {
             if (!data || !Number.isFinite(Number(data.x)) || !Number.isFinite(Number(data.y)) ||
                 !Number.isFinite(Number(data.energy))) throw new Error('Invalid food in snapshot.');
@@ -597,6 +659,7 @@ export class World {
         this.creatures = [];
         this.food = [];
         this.plants = [];
+        this.carcasses = [];
         this.time = resetTime ? 0 : previousTime;
         this.tick = resetTime ? 0 : previousTick;
         this.foodSpawnAccumulator = 0;
