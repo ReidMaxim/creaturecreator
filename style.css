@@ -82,6 +82,43 @@ canvas {
     min-width: 280px;
 }
 
+.inspector {
+    top: 190px;
+    right: 20px;
+    min-width: 280px;
+    line-height: 1.7;
+}
+
+.inspector.hidden {
+    display: none;
+}
+
+.inspector-title {
+    color: #facc15;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.close {
+    float: right;
+    border: 0;
+    background: transparent;
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 12px;
+}
+
+.creature-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
 .center-bottom {
     bottom: 20px;
     left: 50%;

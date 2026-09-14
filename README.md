@@ -51,14 +51,7 @@ python -m http.server 8000
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| 1 | Simulation sandbox (canvas, loop, controls) | 🚀 In Progress |
-| 2 | Food ecosystem (spawn, despawn, regeneration) | ⏳ Planned |
-| 3 | First creature (autonomous wandering, eating) | ⏳ Planned |
-| 4 | Genetics system (inheritable genome) | ⏳ Planned |
-| 5 | Reproduction (asexual breeding) | ⏳ Planned |
-| 6 | Mutation (genetic variation) | ⏳ Planned |
-| 7 | Lineages & generations (ancestry tracking) | ⏳ Planned |
-| 8 | Creature inspector (selection, stats, follow) | ⏳ Planned |
+| 1-8 | Playable ecosystem, genetics, reproduction, lineages, inspector | ✅ Complete |
 | 9 | Modular body parts (eyes, mouths, motors) | ⏳ Planned |
 | 10 | Structural mutation (part addition/removal) | ⏳ Planned |
 | 11 | Part costs (trade-offs, balance) | ⏳ Planned |
@@ -193,6 +186,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 1 (Simulation Sandbox)  
-**Last Updated:** 2026-09-13  
+**Current Phase:** 8 (Evolutionary life simulator)
+**Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim
