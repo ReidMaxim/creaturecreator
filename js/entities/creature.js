@@ -45,7 +45,7 @@ export class Creature {
         const zone = world.getZoneAt(this.x, this.y);
         const effects = world.getEnvironmentEffects();
         this.energy -= deltaTime * (this.genome.metabolism + this.parts.metabolicCost)
-            * zone.energyDrain * effects.energyDrain;
+            * zone.energyDrain * effects.energyDrain * (world.settings.resourcePressure || 1);
         if (this.energy <= 0 || this.age >= world.settings.maxAge) {
             this.alive = false;
             return;

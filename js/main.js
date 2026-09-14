@@ -1,6 +1,6 @@
 import { Creature } from './entities/creature.js';
 import { Renderer } from './renderer.js';
-import { World } from './world.js';
+import { World, SIMULATION_PRESETS } from './world.js';
 import { randomFloat } from './utils/random.js';
 
 const canvas = document.getElementById('canvas');
@@ -44,6 +44,8 @@ const elements = {
     plantEnergy: document.getElementById('plantEnergy'),
     averageFitness: document.getElementById('averageFitness'),
     diversity: document.getElementById('diversity'),
+    populationRatio: document.getElementById('populationRatio'),
+    resourcePressure: document.getElementById('resourcePressure'),
     eventStatus: document.getElementById('eventStatus'),
     eventName: document.getElementById('eventName'),
     eventCountdown: document.getElementById('eventCountdown'),
@@ -65,6 +67,13 @@ const elements = {
     maxFoodValue: document.getElementById('maxFoodValue'),
     plantSpawnRate: document.getElementById('plantSpawnRate'),
     plantSpawnRateValue: document.getElementById('plantSpawnRateValue'),
+    preset: document.getElementById('preset'),
+    maxCreatures: document.getElementById('maxCreatures'),
+    maxCreaturesValue: document.getElementById('maxCreaturesValue'),
+    maxPlants: document.getElementById('maxPlants'),
+    maxPlantsValue: document.getElementById('maxPlantsValue'),
+    resourcePressureSlider: document.getElementById('resourcePressureSlider'),
+    resourcePressureValue: document.getElementById('resourcePressureValue'),
     inspector: document.getElementById('inspector'),
     inspectorBody: document.getElementById('inspectorBody'),
     closeInspector: document.getElementById('closeInspector')
@@ -91,9 +100,11 @@ try {
     elements.autoStart.checked = preferences.autoStart === true;
     elements.resetPause.checked = preferences.resetPause !== false;
     elements.resetTime.checked = preferences.resetTime !== false;
+    if (SIMULATION_PRESETS[preferences.preset]) world.applyPreset(preferences.preset);
 } catch (error) {
     setPersistenceStatus(`Preferences unavailable: ${error.message}`, true);
 }
+elements.preset.value = world.settings.preset;
 
 seedWorld();
 
@@ -126,12 +137,7 @@ function applySnapshot(data) {
         state.speed = Math.max(0.25, Math.min(10, data.speed));
         elements.speed.value = String(state.speed);
     }
-    for (const [input, key] of [[elements.foodSpawnRate, 'foodSpawnRate'],
-        [elements.foodEnergy, 'foodEnergy'], [elements.maxFood, 'maxFood'],
-        [elements.plantSpawnRate, 'plantSpawnRate']]) {
-        input.value = world.settings[key];
-        input.dispatchEvent(new Event('input'));
-    }
+    syncControlsFromWorld();
     renderer.selectedCreature = null;
     inspectCreature(null);
     state.history = [];
@@ -157,10 +163,29 @@ function savePreferences() {
         localStorage.setItem(PREFERENCES_KEY, JSON.stringify({
             autoStart: elements.autoStart.checked,
             resetPause: elements.resetPause.checked,
-            resetTime: elements.resetTime.checked
+            resetTime: elements.resetTime.checked,
+            preset: world.settings.preset || 'sandbox'
         }));
     } catch (error) {
         setPersistenceStatus(`Preferences failed: ${error.message}`, true);
+    }
+
+    function syncControlsFromWorld() {
+        for (const [input, output, key] of [
+            [elements.foodSpawnRate, elements.foodSpawnRateValue, 'foodSpawnRate'],
+            [elements.foodEnergy, elements.foodEnergyValue, 'foodEnergy'],
+            [elements.maxFood, elements.maxFoodValue, 'maxFood'],
+            [elements.plantSpawnRate, elements.plantSpawnRateValue, 'plantSpawnRate'],
+            [elements.maxCreatures, elements.maxCreaturesValue, 'maxCreatures'],
+            [elements.maxPlants, elements.maxPlantsValue, 'maxPlants'],
+            [elements.resourcePressureSlider, elements.resourcePressureValue, 'resourcePressure']
+        ]) {
+            input.value = world.settings[key];
+            const value = Number(input.value);
+            output.textContent = key === 'foodSpawnRate' || key === 'resourcePressure'
+                ? value.toFixed(key === 'resourcePressure' ? 2 : 1) : value;
+        }
+        elements.preset.value = world.settings.preset || 'sandbox';
     }
 }
 
@@ -265,6 +290,8 @@ function updateHud() {
     elements.averageFitness.textContent = stats.averageFitness.toFixed(1);
     elements.diversity.textContent = `${stats.species} / ${stats.lineages}`;
     elements.predatorCount.textContent = stats.predators;
+    elements.populationRatio.textContent = stats.populationRatio;
+    elements.resourcePressure.textContent = `${stats.resourcePressure.toFixed(0)}%`;
     elements.killCount.textContent = stats.predationKills;
     elements.birthCount.textContent = stats.births;
     elements.deathCount.textContent = stats.deaths;
@@ -348,11 +375,24 @@ function setRunning(running) {
 function updateSetting(input, output, key) {
     const value = Number(input.value);
     world.settings[key] = value;
-    output.textContent = key === 'foodSpawnRate' ? value.toFixed(1) : value;
+    output.textContent = key === 'foodSpawnRate' || key === 'resourcePressure'
+        ? value.toFixed(key === 'resourcePressure' ? 2 : 1) : value;
+    if (world.settings.preset !== 'sandbox') {
+        world.settings.preset = 'sandbox';
+        elements.preset.value = 'sandbox';
+    }
+}
+
+function applyPreset() {
+    world.applyPreset(elements.preset.value);
+    syncControlsFromWorld();
+    savePreferences();
+    updateHud();
 }
 
 elements.playPause.addEventListener('click', () => setRunning(!state.running));
 elements.reset.addEventListener('click', resetSimulation);
+elements.preset.addEventListener('change', applyPreset);
 for (const input of [elements.autoStart, elements.resetPause, elements.resetTime]) {
     input.addEventListener('change', savePreferences);
 }
@@ -371,6 +411,15 @@ elements.maxFood.addEventListener('input', () =>
 );
 elements.plantSpawnRate.addEventListener('input', () =>
     updateSetting(elements.plantSpawnRate, elements.plantSpawnRateValue, 'plantSpawnRate')
+);
+elements.maxCreatures.addEventListener('input', () =>
+    updateSetting(elements.maxCreatures, elements.maxCreaturesValue, 'maxCreatures')
+);
+elements.maxPlants.addEventListener('input', () =>
+    updateSetting(elements.maxPlants, elements.maxPlantsValue, 'maxPlants')
+);
+elements.resourcePressureSlider.addEventListener('input', () =>
+    updateSetting(elements.resourcePressureSlider, elements.resourcePressureValue, 'resourcePressure')
 );
 elements.closeInspector.addEventListener('click', () => inspectCreature(null));
 canvas.addEventListener('click', (event) => {
@@ -449,6 +498,7 @@ function frame(now) {
 }
 
 renderer.showGrid = true;
+syncControlsFromWorld();
 setRunning(elements.autoStart.checked);
 updateHud();
 requestAnimationFrame(frame);

@@ -8,6 +8,27 @@ import { Creature } from './entities/creature.js';
 import { Plant } from './entities/plant.js';
 import { createZones, zoneAt, ZONE_DEFINITIONS } from './utils/zones.js';
 
+export const SIMULATION_PRESETS = {
+    balanced: {
+        foodSpawnRate: 2.0, foodEnergy: 50, maxFood: 500,
+        plantSpawnRate: 0.8, maxPlants: 260, maxCreatures: 180, resourcePressure: 1
+    },
+    'predator-rich': {
+        foodSpawnRate: 1.7, foodEnergy: 45, maxFood: 420,
+        plantSpawnRate: 0.65, maxPlants: 220, maxCreatures: 180, resourcePressure: 1.15
+    },
+    'plant-rich': {
+        foodSpawnRate: 2.2, foodEnergy: 55, maxFood: 560,
+        plantSpawnRate: 1.25, maxPlants: 420, maxCreatures: 220, resourcePressure: 0.85
+    },
+    sandbox: {
+        foodSpawnRate: 2.0, foodEnergy: 50, maxFood: 500,
+        plantSpawnRate: 0.8, maxPlants: 260, maxCreatures: 180, resourcePressure: 1
+    }
+};
+
+const PRESET_NAMES = Object.keys(SIMULATION_PRESETS);
+
 export class World {
     constructor(width = 3000, height = 3000) {
         // Dimensions
@@ -25,12 +46,8 @@ export class World {
 
         // Environment settings
         this.settings = {
-            foodSpawnRate: 2.0,        // food per second
-            foodEnergy: 50,            // energy per food item
-            maxFood: 500,              // maximum food items
-            plantSpawnRate: 0.8,
-            maxPlants: 260,
-            maxCreatures: 180,
+            ...SIMULATION_PRESETS.balanced,
+            preset: 'balanced',
             worldSize: width,          // for UI reference
         };
 
@@ -55,6 +72,16 @@ export class World {
         this.nextEventAt = this.time + 38 + Math.random() * 18;
         this.eventHistory = [];
         this.analyticsLog = [];
+    }
+
+    applyPreset(name) {
+        const preset = PRESET_NAMES.includes(name) ? name : 'sandbox';
+        this.settings = {
+            ...this.settings,
+            ...SIMULATION_PRESETS[preset],
+            preset
+        };
+        return this.settings;
     }
 
     /**
@@ -347,6 +374,17 @@ export class World {
             species.add(this.getSpeciesKey(creature));
             lineages.add(creature.lineageId || creature.id);
         }
+        const predators = this.creatures.filter(creature => creature.isPredator).length;
+        const herbivores = this.creatures.length - predators;
+        const creatureLoad = this.settings.maxCreatures
+            ? this.creatures.length / this.settings.maxCreatures : 0;
+        const foodScarcity = this.settings.maxFood
+            ? 1 - this.food.length / this.settings.maxFood : 1;
+        const plantScarcity = this.settings.maxPlants
+            ? 1 - this.plants.length / this.settings.maxPlants : 1;
+        const resourcePressure = Math.max(0, Math.min(100,
+            (creatureLoad * 0.45 + ((foodScarcity + plantScarcity) / 2) * 0.55)
+            * (this.settings.resourcePressure || 1) * 100));
         return {
             creatures: this.creatures.length,
             food: this.food.length,
@@ -358,7 +396,11 @@ export class World {
             births: this.births,
             deaths: this.deaths,
             averageFitness: this.creatures.length ? fitnessTotal / this.creatures.length : 0,
-            predators: this.creatures.filter(creature => creature.isPredator).length,
+            predators,
+            herbivores,
+            predatorRatio: this.creatures.length ? predators / this.creatures.length : 0,
+            populationRatio: `${predators}:${herbivores}`,
+            resourcePressure,
             predationKills: this.predationKills,
             zoneCounts,
             species: species.size,
@@ -464,6 +506,7 @@ export class World {
         this.zones = createZones(this.width, this.height);
         this.spatialGrid = new SpatialGrid(this.width, this.height, 200);
         this.settings = { ...this.settings, ...(snapshot.settings || {}), worldSize: this.width };
+        if (!PRESET_NAMES.includes(this.settings.preset)) this.settings.preset = 'sandbox';
         this.time = Math.max(0, finite(snapshot.time));
         this.tick = Math.max(0, Math.floor(finite(snapshot.tick)));
         this.foodSpawnAccumulator = Math.max(0, finite(snapshot.foodSpawnAccumulator));
