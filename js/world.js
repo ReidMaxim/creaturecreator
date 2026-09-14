@@ -221,6 +221,19 @@ export class World {
         this.maxGeneration = Math.max(this.maxGeneration, creature.generation);
     }
 
+    /**
+     * Add a player-created creature immediately between simulation updates.
+     * Capacity is checked here rather than in the HUD so every caller gets the
+     * same safety guarantee. Normal births continue to use queueBirth().
+     */
+    injectCreature(creature) {
+        if (!creature || this.creatures.length + this.pendingBirths.length >= this.settings.maxCreatures) return false;
+        creature.alive = true;
+        this.addCreature(creature);
+        this.rebuildSpatialGrid();
+        return true;
+    }
+
     queueBirth(child) {
         if (this.creatures.length + this.pendingBirths.length < this.settings.maxCreatures) {
             this.pendingBirths.push(child);

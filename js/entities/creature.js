@@ -18,8 +18,9 @@ export class Creature {
         this.size = this.genome.size;
         this.speed = this.genome.speed * this.parts.movementFactor * (0.82 + this.parts.agility * 0.18);
         this.maxEnergy = this.genome.maxEnergy;
-        this.energy = options.energy ?? randomFloat(this.maxEnergy * 0.7, this.maxEnergy);
-        this.age = options.age || 0;
+        this.energy = Math.max(0, Math.min(this.maxEnergy,
+            options.energy ?? randomFloat(this.maxEnergy * 0.7, this.maxEnergy)));
+        this.age = Math.max(0, Math.min(180, Number(options.age) || 0));
         this.generation = options.generation || 0;
         this.parentId = options.parentId || null;
         this.parentIds = Array.isArray(options.parentIds) ? options.parentIds.slice(0, 2)
