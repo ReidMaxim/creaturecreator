@@ -23,7 +23,8 @@ export const GENE_LIMITS = {
     defense: [0.15, 1],
     agility: [0.2, 1],
     plantPreference: [0, 1],
-    plantEfficiency: [0.45, 1.25]
+    plantEfficiency: [0.45, 1.25],
+    scavenging: [0, 1]
 };
 
 // A small policy vector keeps behavior heritable without introducing a
@@ -76,6 +77,7 @@ export class Genome {
         this.agility = values.agility ?? randomFloat(0.35, 0.8);
         this.plantPreference = values.plantPreference ?? randomFloat(0.55, 0.95);
         this.plantEfficiency = values.plantEfficiency ?? randomFloat(0.7, 1.05);
+        this.scavenging = values.scavenging ?? randomFloat(0.1, 0.75);
         this.neuralWeights = {};
         const inheritedWeights = values.neuralWeights || {};
         for (const name of NEURAL_WEIGHT_NAMES) {

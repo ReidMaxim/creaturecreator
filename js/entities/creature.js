@@ -32,6 +32,7 @@ export class Creature {
         this.reproductionCooldown = 0;
         this.behaviorStats = {
             foodEaten: 0,
+            scavengedEnergy: 0,
             kills: 0,
             distanceTravelled: 0,
             decisions: 0
@@ -47,6 +48,7 @@ export class Creature {
         this.energy -= deltaTime * (this.genome.metabolism + this.parts.metabolicCost)
             * zone.energyDrain * effects.energyDrain * (world.settings.resourcePressure || 1);
         if (this.energy <= 0 || this.age >= world.settings.maxAge) {
+            this.deathCause = this.energy <= 0 ? 'starvation' : 'old age';
             this.alive = false;
             return;
         }
@@ -74,6 +76,23 @@ export class Creature {
                     this.energy + eaten * this.genome.plantEfficiency);
                 if (eaten > 0) this.behaviorStats.foodEaten += 1;
                 break;
+            }
+
+            if (this.genome.scavenging > 0.18 && this.parts.eatingEfficiency > 0) {
+                for (let index = world.carcasses.length - 1; index >= 0; index -= 1) {
+                    const carcass = world.carcasses[index];
+                    if (this.distanceTo(carcass, world) > this.size + 8) continue;
+                    const eaten = carcass.consume(8 * deltaTime + this.genome.scavenging * 4);
+                    if (eaten > 0) {
+                        const recovered = eaten * this.parts.eatingEfficiency
+                            * (0.55 + this.genome.scavenging * 0.45);
+                        this.energy = Math.min(this.maxEnergy, this.energy + recovered);
+                        this.behaviorStats.foodEaten += 1;
+                        this.behaviorStats.scavengedEnergy += recovered;
+                    }
+                    if (!carcass.alive) world.removeCarcass(index);
+                    break;
+                }
             }
             for (let index = world.food.length - 1; index >= 0; index -= 1) {
                 const food = world.food[index];

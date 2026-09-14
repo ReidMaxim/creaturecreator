@@ -63,6 +63,7 @@ python -m http.server 8000
 | 19 | Persistence, JSON import/export, and population history | ✅ Complete |
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
+| 23 | Advanced ecology: carcass scavenging and bounded omnivory | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -112,6 +113,14 @@ Custom capacity and pressure sliders remain available for experiments, and the
 selected preset is retained in preferences and serialized snapshots. The HUD
 reports resource pressure and the predator-to-herbivore population ratio so
 long-running outcomes are measurable. See [`docs/PHASE21.md`](./docs/PHASE21.md).
+
+### Phase 23: Advanced ecology
+
+Creatures now inherit bounded scavenging affinity and can sense and consume
+short-lived carcasses left by deaths. Recovered energy, carcass counts, and
+the scavenging trait are visible in the HUD, renderer, inspector, and
+version-1 persistence snapshots. Existing plant feeding and predator attacks
+remain unchanged. See [`docs/PHASE23.md`](./docs/PHASE23.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -262,6 +271,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 20 (Experiment controls and live analytics)
+**Current Phase:** 23 (Advanced ecology)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim
