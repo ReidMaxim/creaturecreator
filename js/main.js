@@ -39,6 +39,7 @@ const elements = {
     speedDisplay: document.getElementById('speedDisplay'),
     creatureCount: document.getElementById('creatureCount'),
     generation: document.getElementById('generation'),
+    reproductionModeDisplay: document.getElementById('reproductionModeDisplay'),
     foodCount: document.getElementById('foodCount'),
     plantCount: document.getElementById('plantCount'),
     carcassCount: document.getElementById('carcassCount'),
@@ -76,6 +77,7 @@ const elements = {
     maxPlantsValue: document.getElementById('maxPlantsValue'),
     resourcePressureSlider: document.getElementById('resourcePressureSlider'),
     resourcePressureValue: document.getElementById('resourcePressureValue'),
+    reproductionMode: document.getElementById('reproductionMode'),
     inspector: document.getElementById('inspector'),
     inspectorBody: document.getElementById('inspectorBody'),
     closeInspector: document.getElementById('closeInspector')
@@ -102,6 +104,7 @@ try {
     elements.autoStart.checked = preferences.autoStart === true;
     elements.resetPause.checked = preferences.resetPause !== false;
     elements.resetTime.checked = preferences.resetTime !== false;
+    if (preferences.reproductionMode === 'sexual') world.settings.reproductionMode = 'sexual';
     if (SIMULATION_PRESETS[preferences.preset]) world.applyPreset(preferences.preset);
 } catch (error) {
     setPersistenceStatus(`Preferences unavailable: ${error.message}`, true);
@@ -167,28 +170,31 @@ function savePreferences() {
             resetPause: elements.resetPause.checked,
             resetTime: elements.resetTime.checked,
             preset: world.settings.preset || 'sandbox'
+            ,reproductionMode: world.settings.reproductionMode || 'asexual'
         }));
     } catch (error) {
         setPersistenceStatus(`Preferences failed: ${error.message}`, true);
     }
 
-    function syncControlsFromWorld() {
-        for (const [input, output, key] of [
-            [elements.foodSpawnRate, elements.foodSpawnRateValue, 'foodSpawnRate'],
-            [elements.foodEnergy, elements.foodEnergyValue, 'foodEnergy'],
-            [elements.maxFood, elements.maxFoodValue, 'maxFood'],
-            [elements.plantSpawnRate, elements.plantSpawnRateValue, 'plantSpawnRate'],
-            [elements.maxCreatures, elements.maxCreaturesValue, 'maxCreatures'],
-            [elements.maxPlants, elements.maxPlantsValue, 'maxPlants'],
-            [elements.resourcePressureSlider, elements.resourcePressureValue, 'resourcePressure']
-        ]) {
-            input.value = world.settings[key];
-            const value = Number(input.value);
-            output.textContent = key === 'foodSpawnRate' || key === 'resourcePressure'
-                ? value.toFixed(key === 'resourcePressure' ? 2 : 1) : value;
-        }
-        elements.preset.value = world.settings.preset || 'sandbox';
+}
+
+function syncControlsFromWorld() {
+    for (const [input, output, key] of [
+        [elements.foodSpawnRate, elements.foodSpawnRateValue, 'foodSpawnRate'],
+        [elements.foodEnergy, elements.foodEnergyValue, 'foodEnergy'],
+        [elements.maxFood, elements.maxFoodValue, 'maxFood'],
+        [elements.plantSpawnRate, elements.plantSpawnRateValue, 'plantSpawnRate'],
+        [elements.maxCreatures, elements.maxCreaturesValue, 'maxCreatures'],
+        [elements.maxPlants, elements.maxPlantsValue, 'maxPlants'],
+        [elements.resourcePressureSlider, elements.resourcePressureValue, 'resourcePressure']
+    ]) {
+        input.value = world.settings[key];
+        const value = Number(input.value);
+        output.textContent = key === 'foodSpawnRate' || key === 'resourcePressure'
+            ? value.toFixed(key === 'resourcePressure' ? 2 : 1) : value;
     }
+    elements.preset.value = world.settings.preset || 'sandbox';
+    elements.reproductionMode.value = world.settings.reproductionMode || 'asexual';
 }
 
 function saveToLocalStorage() {
@@ -286,6 +292,7 @@ function updateHud() {
     elements.fps.textContent = Math.round(state.fps);
     elements.creatureCount.textContent = stats.creatures;
     elements.generation.textContent = stats.generation;
+    elements.reproductionModeDisplay.textContent = stats.reproductionMode;
     elements.foodCount.textContent = stats.food;
     elements.plantCount.textContent = stats.plants;
     elements.carcassCount.textContent = stats.carcasses;
@@ -338,6 +345,9 @@ function inspectCreature(creature) {
     elements.inspectorBody.innerHTML = `
         <div class="creature-swatch" style="background:${creature.color}"></div>
         <strong>#${creature.id}</strong> &middot; generation ${creature.generation}<br>
+        Sex ${creature.sex} &middot; parents ${
+            (creature.parentIds && creature.parentIds.length ? creature.parentIds.join(' + ') : 'founder')
+        }<br>
         Age ${creature.age.toFixed(1)}s &middot; energy ${creature.energy.toFixed(0)}<br>
         Size ${creature.genome.size.toFixed(1)} &middot; speed ${creature.genome.speed.toFixed(1)}<br>
         Metabolism ${(creature.genome.metabolism + creature.parts.metabolicCost).toFixed(2)}
@@ -399,6 +409,11 @@ function applyPreset() {
 elements.playPause.addEventListener('click', () => setRunning(!state.running));
 elements.reset.addEventListener('click', resetSimulation);
 elements.preset.addEventListener('change', applyPreset);
+elements.reproductionMode.addEventListener('change', () => {
+    world.settings.reproductionMode = elements.reproductionMode.value === 'sexual' ? 'sexual' : 'asexual';
+    savePreferences();
+    updateHud();
+});
 for (const input of [elements.autoStart, elements.resetPause, elements.resetTime]) {
     input.addEventListener('change', savePreferences);
 }

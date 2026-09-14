@@ -63,6 +63,7 @@ python -m http.server 8000
 | 19 | Persistence, JSON import/export, and population history | ✅ Complete |
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
+| 22 | Optional sexual reproduction and heritable genome recombination | ✅ Complete |
 | 23 | Advanced ecology: carcass scavenging and bounded omnivory | ✅ Complete |
 
 Every phase ships as a playable milestone.
@@ -113,6 +114,14 @@ Custom capacity and pressure sliders remain available for experiments, and the
 selected preset is retained in preferences and serialized snapshots. The HUD
 reports resource pressure and the predator-to-herbivore population ratio so
 long-running outcomes are measurable. See [`docs/PHASE21.md`](./docs/PHASE21.md).
+
+### Phase 22: Optional sexual reproduction
+
+The reproduction control can switch between compatible legacy asexual mode and
+sexual mating. Sexual mates seek compatible nearby partners, pay bounded costs,
+observe cooldowns, and produce deferred offspring with recombined genomes,
+mutation, and two-parent metadata. The HUD and inspector expose active mode and
+ancestry. See [`docs/PHASE22.md`](./docs/PHASE22.md).
 
 ### Phase 23: Advanced ecology
 

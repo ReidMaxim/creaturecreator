@@ -119,6 +119,19 @@ export class Genome {
         return child;
     }
 
+    static recombine(first, second) {
+        const values = {};
+        for (const gene of Object.keys(GENE_LIMITS)) {
+            values[gene] = random() < 0.5 ? first[gene] : second[gene];
+        }
+        values.neuralWeights = {};
+        for (const name of NEURAL_WEIGHT_NAMES) {
+            values.neuralWeights[name] = random() < 0.5
+                ? first.neuralWeights[name] : second.neuralWeights[name];
+        }
+        return new Genome(values);
+    }
+
     get maxEnergy() {
         return 95 + this.size * 6;
     }
