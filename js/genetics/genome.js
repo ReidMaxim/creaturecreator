@@ -20,6 +20,31 @@ export const GENE_LIMITS = {
     risk: [0, 1.2]
 };
 
+// A small policy vector keeps behavior heritable without introducing a
+// heavyweight neural-network runtime. Values are intentionally bounded so a
+// rare mutation cannot make a creature uncontrollable.
+export const NEURAL_WEIGHT_NAMES = [
+    'foodDirection',
+    'foodDistance',
+    'energyUrgency',
+    'wander',
+    'persistence',
+    'risk',
+    'bias'
+];
+
+const DEFAULT_NEURAL_WEIGHTS = {
+    foodDirection: 1.15,
+    foodDistance: 0.55,
+    energyUrgency: 0.35,
+    wander: 0.45,
+    persistence: 0.2,
+    risk: 0.25,
+    bias: 0
+};
+
+const NEURAL_WEIGHT_LIMIT = 2;
+
 export class Genome {
     constructor(values = {}) {
         this.size = values.size ?? randomFloat(8, 14);
@@ -39,10 +64,23 @@ export class Genome {
         this.wander = values.wander ?? randomFloat(0.2, 0.65);
         this.persistence = values.persistence ?? randomFloat(0.55, 1.1);
         this.risk = values.risk ?? randomFloat(0.25, 0.8);
+        this.neuralWeights = {};
+        const inheritedWeights = values.neuralWeights || {};
+        for (const name of NEURAL_WEIGHT_NAMES) {
+            const value = Array.isArray(inheritedWeights)
+                ? inheritedWeights[NEURAL_WEIGHT_NAMES.indexOf(name)]
+                : inheritedWeights[name];
+            this.neuralWeights[name] = Number.isFinite(value)
+                ? Math.max(-NEURAL_WEIGHT_LIMIT, Math.min(NEURAL_WEIGHT_LIMIT, value))
+                : DEFAULT_NEURAL_WEIGHTS[name];
+        }
     }
 
     clone() {
-        return new Genome(this);
+        return new Genome({
+            ...this,
+            neuralWeights: { ...this.neuralWeights }
+        });
     }
 
     mutated(rate = 0.08) {
@@ -54,6 +92,14 @@ export class Genome {
                 child[gene] += randomGaussian(0, span * 0.08);
                 if (gene === 'hue') child[gene] = (child[gene] + 360) % 360;
                 else child[gene] = Math.max(min, Math.min(max, child[gene]));
+            }
+        }
+        for (const name of NEURAL_WEIGHT_NAMES) {
+            if (random() < rate) {
+                child.neuralWeights[name] = Math.max(
+                    -NEURAL_WEIGHT_LIMIT,
+                    Math.min(NEURAL_WEIGHT_LIMIT, child.neuralWeights[name] + randomGaussian(0, 0.16))
+                );
             }
         }
         return child;

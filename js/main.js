@@ -34,6 +34,7 @@ const elements = {
     creatureCount: document.getElementById('creatureCount'),
     generation: document.getElementById('generation'),
     foodCount: document.getElementById('foodCount'),
+    averageFitness: document.getElementById('averageFitness'),
     fps: document.getElementById('fps'),
     camX: document.getElementById('camX'),
     camY: document.getElementById('camY'),
@@ -55,6 +56,7 @@ function updateHud() {
     elements.creatureCount.textContent = stats.creatures;
     elements.generation.textContent = stats.generation;
     elements.foodCount.textContent = stats.food;
+    elements.averageFitness.textContent = stats.averageFitness.toFixed(1);
     elements.speedDisplay.textContent = `${state.speed.toFixed(2)}x`;
     elements.camX.textContent = Math.round(renderer.camera.x);
     elements.camY.textContent = Math.round(renderer.camera.y);
@@ -80,10 +82,16 @@ function inspectCreature(creature) {
         &middot; motor ${creature.parts.motor.count} (${creature.parts.motor.strength.toFixed(2)})<br>
         Feeding ${(creature.parts.eatingEfficiency * 100).toFixed(0)}%
         &middot; movement ${(creature.parts.movementFactor * 100).toFixed(0)}%<br>
-        Brain: food ${(creature.genome.foodAttraction).toFixed(2)}
+        Brain genes: food ${(creature.genome.foodAttraction).toFixed(2)}
         &middot; wander ${(creature.genome.wander).toFixed(2)}
         &middot; persistence ${(creature.genome.persistence).toFixed(2)}
         &middot; risk ${(creature.genome.risk).toFixed(2)}<br>
+        Neural policy:
+        ${Object.entries(creature.genome.neuralWeights)
+            .map(([name, value]) => `${name} ${value.toFixed(2)}`).join(' &middot; ')}<br>
+        Fitness ${creature.fitness.toFixed(1)}
+        &middot; food eaten ${creature.behaviorStats.foodEaten}
+        &middot; travel ${creature.behaviorStats.distanceTravelled.toFixed(0)}<br>
         Action: turn ${(creature.brain.lastAction.turn).toFixed(2)}
         &middot; thrust ${(creature.brain.lastAction.thrust).toFixed(2)}<br>
         Reproduces at ${creature.genome.reproductionAge.toFixed(1)}s / ${creature.genome.reproductionThreshold.toFixed(0)} energy
