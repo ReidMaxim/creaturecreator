@@ -1,4 +1,4 @@
-import { random, randomFloat, randomGaussian } from '../utils/random.js';
+import { random, randomFloat, randomGaussian, randomInt } from '../utils/random.js';
 
 export const GENE_LIMITS = {
     size: [6, 22],
@@ -7,7 +7,13 @@ export const GENE_LIMITS = {
     vision: [70, 280],
     hue: [0, 360],
     reproductionThreshold: [105, 155],
-    reproductionAge: [8, 45]
+    reproductionAge: [8, 45],
+    eyeCount: [0, 3],
+    eyeStrength: [0.2, 1],
+    mouthCount: [0, 3],
+    mouthStrength: [0.2, 1],
+    motorCount: [0, 3],
+    motorStrength: [0.2, 1]
 };
 
 export class Genome {
@@ -19,6 +25,12 @@ export class Genome {
         this.hue = values.hue ?? randomFloat(0, 360);
         this.reproductionThreshold = values.reproductionThreshold ?? randomFloat(120, 155);
         this.reproductionAge = values.reproductionAge ?? randomFloat(12, 24);
+        this.eyeCount = values.eyeCount ?? randomInt(1, 3);
+        this.eyeStrength = values.eyeStrength ?? randomFloat(0.55, 1);
+        this.mouthCount = values.mouthCount ?? randomInt(1, 2);
+        this.mouthStrength = values.mouthStrength ?? randomFloat(0.55, 1);
+        this.motorCount = values.motorCount ?? randomInt(1, 3);
+        this.motorStrength = values.motorStrength ?? randomFloat(0.55, 1);
     }
 
     clone() {
