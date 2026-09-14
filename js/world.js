@@ -7,6 +7,7 @@ import { SpatialGrid } from './utils/spatialGrid.js';
 import { Creature } from './entities/creature.js';
 import { Plant } from './entities/plant.js';
 import { createZones, zoneAt, ZONE_DEFINITIONS } from './utils/zones.js';
+import { getRandomState, random, randomInt, setRandomState } from './utils/random.js';
 
 export const SIMULATION_PRESETS = {
     balanced: {
@@ -73,7 +74,9 @@ export class World {
         this.settings.mateCooldown = 6;
         this.settings.mateEnergyCost = 28;
         this.event = null;
-        this.nextEventAt = this.time + 38 + Math.random() * 18;
+        this.seed = 26026;
+        this.experimentLabel = 'Untitled experiment';
+        this.nextEventAt = this.time + 38 + random() * 18;
         this.eventHistory = [];
         this.analyticsLog = [];
     }
@@ -164,8 +167,8 @@ export class World {
     spawnFood() {
         if (this.food.length >= this.settings.maxFood) return;
 
-        const x = Math.random() * this.width;
-        const y = Math.random() * this.height;
+        const x = random() * this.width;
+        const y = random() * this.height;
         const zone = this.getZoneAt(x, y);
         const food = {
             x, y,
@@ -179,10 +182,10 @@ export class World {
 
     spawnPlant() {
         if (this.plants.length >= this.settings.maxPlants) return;
-        const x = Math.random() * this.width;
-        const y = Math.random() * this.height;
+        const x = random() * this.width;
+        const y = random() * this.height;
         const zone = this.getZoneAt(x, y);
-        if (Math.random() > zone.plantDensity * this.getEnvironmentEffects().plantDensity) return;
+        if (random() > zone.plantDensity * this.getEnvironmentEffects().plantDensity) return;
         this.addPlant(new Plant(x, y, { zoneType: zone.type }));
     }
 
@@ -196,13 +199,13 @@ export class World {
 
     queuePlantSeed(parent) {
         if (this.plants.length + this.pendingPlantSeeds.length >= this.settings.maxPlants) return;
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 25 + Math.random() * 70;
+        const angle = random() * Math.PI * 2;
+        const distance = 25 + random() * 70;
         this.pendingPlantSeeds.push(new Plant(
             parent.x + Math.cos(angle) * distance,
             parent.y + Math.sin(angle) * distance,
             { energy: 2, maxEnergy: parent.maxEnergy, growthRate: parent.growthRate,
-                lifespan: parent.lifespan, seedTimer: 10 + Math.random() * 12,
+                lifespan: parent.lifespan, seedTimer: 10 + random() * 12,
                 zoneType: parent.zoneType }
         ));
     }
@@ -311,7 +314,7 @@ export class World {
                 this.recordEvent(`${this.event.name} ended`, this.event.color);
                 this.eventHistory.push(this.event.type);
                 this.event = null;
-                this.nextEventAt = this.time + 42 + Math.random() * 24;
+                this.nextEventAt = this.time + 42 + random() * 24;
             }
             return;
         }
@@ -330,7 +333,7 @@ export class World {
                 effects: { plantGrowth: 0.8, plantSpawn: 0.8, plantDensity: 0.9,
                     foodSpawn: 1.35, movement: 0.68, energyDrain: 1.12 } }
         ];
-        const selected = events[Math.floor(Math.random() * events.length)];
+        const selected = events[randomInt(0, events.length)];
         this.event = { ...selected, remaining: selected.duration };
         this.recordEvent(`${selected.name} started`, selected.color);
     }
@@ -448,6 +451,9 @@ export class World {
     serialize() {
         return {
             version: 1,
+            seed: this.seed,
+            randomState: getRandomState(),
+            experimentLabel: this.experimentLabel,
             width: this.width,
             height: this.height,
             settings: { ...this.settings },
@@ -532,6 +538,10 @@ export class World {
         this.zones = createZones(this.width, this.height);
         this.spatialGrid = new SpatialGrid(this.width, this.height, 200);
         this.settings = { ...this.settings, ...(snapshot.settings || {}), worldSize: this.width };
+        this.seed = Number.isFinite(Number(snapshot.seed)) ? Number(snapshot.seed) >>> 0 : this.seed;
+        setRandomState(snapshot.randomState);
+        this.experimentLabel = typeof snapshot.experimentLabel === 'string'
+            ? snapshot.experimentLabel.slice(0, 80) : 'Untitled experiment';
         if (!PRESET_NAMES.includes(this.settings.preset)) this.settings.preset = 'sandbox';
         if (this.settings.reproductionMode !== 'sexual') this.settings.reproductionMode = 'asexual';
         this.time = Math.max(0, finite(snapshot.time));
@@ -608,7 +618,7 @@ export class World {
         this.predationKills = 0;
         this.maxGeneration = 0;
         this.event = null;
-        this.nextEventAt = this.time + 38 + Math.random() * 18;
+        this.nextEventAt = this.time + 38 + random() * 18;
         this.eventHistory = [];
         this.analyticsLog = [];
         this.spatialGrid.clear();
