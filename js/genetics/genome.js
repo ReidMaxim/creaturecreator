@@ -13,7 +13,11 @@ export const GENE_LIMITS = {
     mouthCount: [0, 3],
     mouthStrength: [0.2, 1],
     motorCount: [0, 3],
-    motorStrength: [0.2, 1]
+    motorStrength: [0.2, 1],
+    foodAttraction: [0, 1.5],
+    wander: [0, 1.2],
+    persistence: [0, 1.5],
+    risk: [0, 1.2]
 };
 
 export class Genome {
@@ -31,6 +35,10 @@ export class Genome {
         this.mouthStrength = values.mouthStrength ?? randomFloat(0.55, 1);
         this.motorCount = values.motorCount ?? randomInt(1, 3);
         this.motorStrength = values.motorStrength ?? randomFloat(0.55, 1);
+        this.foodAttraction = values.foodAttraction ?? randomFloat(0.75, 1.15);
+        this.wander = values.wander ?? randomFloat(0.2, 0.65);
+        this.persistence = values.persistence ?? randomFloat(0.55, 1.1);
+        this.risk = values.risk ?? randomFloat(0.25, 0.8);
     }
 
     clone() {

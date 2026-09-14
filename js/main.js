@@ -80,6 +80,12 @@ function inspectCreature(creature) {
         &middot; motor ${creature.parts.motor.count} (${creature.parts.motor.strength.toFixed(2)})<br>
         Feeding ${(creature.parts.eatingEfficiency * 100).toFixed(0)}%
         &middot; movement ${(creature.parts.movementFactor * 100).toFixed(0)}%<br>
+        Brain: food ${(creature.genome.foodAttraction).toFixed(2)}
+        &middot; wander ${(creature.genome.wander).toFixed(2)}
+        &middot; persistence ${(creature.genome.persistence).toFixed(2)}
+        &middot; risk ${(creature.genome.risk).toFixed(2)}<br>
+        Action: turn ${(creature.brain.lastAction.turn).toFixed(2)}
+        &middot; thrust ${(creature.brain.lastAction.thrust).toFixed(2)}<br>
         Reproduces at ${creature.genome.reproductionAge.toFixed(1)}s / ${creature.genome.reproductionThreshold.toFixed(0)} energy
     `;
 }

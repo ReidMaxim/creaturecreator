@@ -53,8 +53,8 @@ python -m http.server 8000
 |-------|-------|--------|
 | 1-8 | Playable ecosystem, genetics, reproduction, lineages, inspector | ✅ Complete |
 | 9-12 | Modular heritable body parts, structural mutation, costs, and sensory systems | ✅ Complete |
-| 13 | Primitive neural brain (simple decision-making) | ⏳ Planned |
-| 14 | Neural mutation (learning to evolve) | ⏳ Planned |
+| 13 | Primitive neural brain (simple decision-making) | ✅ Complete |
+| 14 | Neural mutation (learning to evolve) | ⏳ Next |
 | 15 | Predation (carnivores, food chains) | ⏳ Planned |
 | 16 | Plants (living, growing, seeding) | ⏳ Planned |
 | 17 | Environmental zones (terrain variation) | ⏳ Planned |
@@ -183,6 +183,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 12 (Modular body parts and visible traits)
+**Current Phase:** 13 (Primitive heritable decision brains)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

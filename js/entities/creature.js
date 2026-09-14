@@ -1,7 +1,8 @@
 import { Genome } from '../genetics/genome.js';
 import { makeChild } from '../genetics/reproduction.js';
-import { random, randomAngle, randomFloat } from '../utils/random.js';
+import { randomAngle, randomFloat } from '../utils/random.js';
 import { createBodyParts } from '../parts/bodyParts.js';
+import { DecisionBrain } from '../brain/brain.js';
 
 let nextCreatureId = 1;
 
@@ -12,6 +13,7 @@ export class Creature {
         this.y = y;
         this.genome = options.genome instanceof Genome ? options.genome : new Genome(options.genome);
         this.parts = createBodyParts(this.genome);
+        this.brain = new DecisionBrain(this.genome);
         this.size = this.genome.size;
         this.speed = this.genome.speed * this.parts.movementFactor;
         this.maxEnergy = this.genome.maxEnergy;
@@ -23,7 +25,6 @@ export class Creature {
         this.alive = true;
         this.isCreature = true;
         this.color = `hsl(${Math.round(this.genome.hue)} 75% 60%)`;
-        this.wanderTimer = randomFloat(0, 2);
         this.reproductionCooldown = 0;
     }
 
@@ -36,23 +37,12 @@ export class Creature {
             return;
         }
 
-        const nearbyFood = world.getNearby(this.x, this.y, this.parts.vision, 'food');
-        if (nearbyFood.length) {
-            const target = nearbyFood.reduce((closest, food) =>
-                this.distanceTo(food, world) < this.distanceTo(closest, world) ? food : closest
-            );
-            this.rotation = Math.atan2(target.y - this.y, target.x - this.x);
-        } else {
-            this.wanderTimer -= deltaTime;
-            if (this.wanderTimer <= 0) {
-                this.rotation += randomFloat(-1.2, 1.2);
-                this.wanderTimer = randomFloat(0.5, 2);
-            }
-        }
+        const action = this.brain.decide(this, world, deltaTime);
+        this.rotation += action.turn * (1.8 + this.genome.persistence * 0.35) * deltaTime;
 
         const position = world.wrapPosition(
-            this.x + Math.cos(this.rotation) * this.speed * deltaTime,
-            this.y + Math.sin(this.rotation) * this.speed * deltaTime
+            this.x + Math.cos(this.rotation) * this.speed * action.thrust * deltaTime,
+            this.y + Math.sin(this.rotation) * this.speed * action.thrust * deltaTime
         );
         this.x = position.x;
         this.y = position.y;
