@@ -64,6 +64,7 @@ python -m http.server 8000
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
 | 27 | Bounded heritable phenotypes, body plans, and evolved rendering | ✅ Complete |
+| 28 | Visual evolution history, parent/offspring comparisons, and mutation highlights | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -122,6 +123,15 @@ multiple deterministic silhouettes with markings, variable eyes/mouths/motors,
 defense features, and energy/age/state cues. The inspector reports both
 phenotype traits and current visual state, while existing JSON saves and
 controls remain compatible. See [`docs/PHASE27.md`](./docs/PHASE27.md).
+
+### Phase 28: Visual evolution history
+
+Births retain a bounded parent/offspring phenotype comparison and the visual
+genes that changed. The inspector highlights mutations and lineage continuity,
+while the population history panel shows a compact recent phenotype timeline.
+History is optional in snapshots, capped for long-running simulations, and
+backward-compatible with earlier saves. See
+[`docs/PHASE28.md`](./docs/PHASE28.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -203,7 +213,8 @@ creaturecreator/
 │   ├── PHASE19.md            # Persistence and population history notes
 │   ├── PHASE20.md            # Experiment controls and live analytics notes
 │   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
-│   └── PHASE27.md            # Heritable phenotypes and body-plan rendering
+│   ├── PHASE27.md            # Heritable phenotypes and body-plan rendering
+│   └── PHASE28.md            # Visual evolution history and comparisons
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -274,6 +285,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 27 (Heritable phenotypes and body plans)
+**Current Phase:** 28 (Visual evolution history)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

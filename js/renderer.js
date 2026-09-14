@@ -250,6 +250,13 @@ export class Renderer {
             this.ctx.ellipse(0, 0, length + 1, width + 1, 0, 0, Math.PI * 2);
             this.ctx.stroke();
         }
+        this.ctx.strokeStyle = creature.lineageColor || '#94a3b8';
+        this.ctx.globalAlpha = 0.7;
+        this.ctx.lineWidth = Math.max(1, size * 0.045);
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 0, length + 3, width + 3, 0, 0, Math.PI * 2);
+        this.ctx.stroke();
+        this.ctx.globalAlpha = 1;
 
         const parts = creature.parts;
         if (parts && parts.eyes.count) {

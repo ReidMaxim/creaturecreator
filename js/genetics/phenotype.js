@@ -2,6 +2,47 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 
 
 const hue = value => ((Number(value) || 0) % 360 + 360) % 360;
 
+const LINEAGE_PALETTE = ['#4ade80', '#60a5fa', '#f472b6', '#facc15', '#c084fc', '#fb923c'];
+
+export function lineageColor(lineageId) {
+    const text = String(lineageId ?? '0');
+    let hash = 0;
+    for (let index = 0; index < text.length; index += 1) hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+    return LINEAGE_PALETTE[hash % LINEAGE_PALETTE.length];
+}
+
+export function phenotypeSnapshot(phenotype = {}) {
+    return {
+        shape: phenotype.shape ?? 0,
+        width: phenotype.width ?? 1,
+        length: phenotype.length ?? 1,
+        taper: phenotype.taper ?? 1,
+        tail: phenotype.tail ?? 0,
+        pattern: phenotype.pattern ?? 0,
+        armor: phenotype.armor ?? 0,
+        fin: phenotype.fin ?? 0,
+        color: phenotype.color || '#94a3b8'
+    };
+}
+
+export function compareGenomeGenes(parentGenome, childGenome) {
+    if (!parentGenome || !childGenome) return [];
+    const changes = [];
+    const names = ['size', 'hue', 'bodyShape', 'bodyWidth', 'bodyLength', 'bodyTaper',
+        'tailStyle', 'pattern', 'patternScale', 'armor', 'fin', 'finAngle', 'motorLength'];
+    for (const name of names) {
+        const before = Number(parentGenome[name]);
+        const after = Number(childGenome[name]);
+        if (!Number.isFinite(before) || !Number.isFinite(after)) continue;
+        const difference = name === 'hue'
+            ? Math.min(Math.abs(after - before), 360 - Math.abs(after - before))
+            : Math.abs(after - before);
+        const threshold = ['bodyShape', 'tailStyle', 'pattern'].includes(name) ? 0.5 : 0.01;
+        if (difference >= threshold) changes.push({ name, before, after });
+    }
+    return changes;
+}
+
 /**
  * Convert legacy-compatible genome values into the bounded body plan shared
  * by simulation and rendering. Missing Phase 27 genes intentionally receive

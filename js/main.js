@@ -84,7 +84,8 @@ const elements = {
     importFile: document.getElementById('importFile'),
     snapshotText: document.getElementById('snapshotText'),
     persistenceStatus: document.getElementById('persistenceStatus'),
-    historyCanvas: document.getElementById('historyCanvas')
+    historyCanvas: document.getElementById('historyCanvas'),
+    evolutionTimeline: document.getElementById('evolutionTimeline')
     ,reset: document.getElementById('resetBtn')
     ,resetPause: document.getElementById('resetPause')
     ,resetTime: document.getElementById('resetTime')
@@ -322,6 +323,20 @@ function updateHud() {
         row.append(time, message);
         return row;
     }));
+    drawEvolutionTimeline();
+}
+
+function drawEvolutionTimeline() {
+    const entries = (world.evolutionHistory || []).slice(-14);
+    elements.evolutionTimeline.replaceChildren(...entries.map(entry => {
+        const dot = document.createElement('span');
+        dot.className = 'history-dot';
+        const mutations = Array.isArray(entry.mutations) ? entry.mutations : [];
+        dot.title = `Generation ${entry.generation} · ${mutations.length} mutation${mutations.length === 1 ? '' : 's'}`;
+        dot.style.setProperty('--lineage-color', entry.lineageColor || '#94a3b8');
+        dot.style.setProperty('--phenotype-color', entry.phenotype.color || '#94a3b8');
+        return dot;
+    }));
 }
 
 function inspectCreature(creature) {
@@ -331,17 +346,38 @@ function inspectCreature(creature) {
         return;
     }
     elements.inspector.classList.remove('hidden');
+    const evolution = (world.evolutionHistory || []).find(entry => entry.id === creature.id);
+    const mutations = evolution?.mutations || [];
+    const mutationNames = new Set(mutations.map(change => change.name));
+    const parentColor = evolution?.parentPhenotype?.color || creature.parentPhenotype?.color || '#475569';
+    const comparison = creature.parentId ? `
+        <div class="lineage-comparison" style="--lineage-color:${creature.lineageColor}">
+            <strong>Lineage ${creature.lineageId}</strong> · parent #${creature.parentId}
+            <div class="phenotype-strip">
+                <span class="phenotype-card"><span class="creature-swatch" style="background:${parentColor}"></span>parent</span>
+                <span>→</span>
+                <span class="phenotype-card"><span class="creature-swatch" style="background:${creature.color}"></span>offspring</span>
+            </div>
+            ${mutations.length
+        ? `Changed genes: ${mutations.map(change => `<span class="mutation">${change.name}</span>`).join(', ')}`
+        : 'No recorded visual gene changes'}
+        </div>` : `
+        <div class="lineage-comparison" style="--lineage-color:${creature.lineageColor}">
+            <strong>Founding lineage ${creature.lineageId}</strong> · no parent comparison
+        </div>`;
     elements.inspectorBody.innerHTML = `
         <div class="creature-swatch" style="background:${creature.color}"></div>
         <strong>#${creature.id}</strong> &middot; generation ${creature.generation}<br>
+        ${comparison}
         Age ${creature.age.toFixed(1)}s &middot; energy ${creature.energy.toFixed(0)}<br>
         Visual state: <strong>${creature.visualState || 'stable'}</strong>
         &middot; silhouette ${['round', 'oval', 'diamond', 'ribbon'][creature.phenotype?.shape || 0]}
         &middot; growth ${(creature.phenotype?.growth * 100 || 100).toFixed(0)}%<br>
-        Geometry ${(creature.phenotype?.width || 1).toFixed(2)}w × ${(creature.phenotype?.length || 1).toFixed(2)}l
+        Geometry ${mutationNames.has('bodyWidth') ? '<span class="mutation">' : ''}${(creature.phenotype?.width || 1).toFixed(2)}w${mutationNames.has('bodyWidth') ? '</span>' : ''}
+        × ${mutationNames.has('bodyLength') ? '<span class="mutation">' : ''}${(creature.phenotype?.length || 1).toFixed(2)}l${mutationNames.has('bodyLength') ? '</span>' : ''}
         &middot; taper ${(creature.phenotype?.taper || 1).toFixed(2)}
-        &middot; pattern ${creature.phenotype?.pattern || 0}
-        &middot; armor ${(creature.phenotype?.armor * 100 || 0).toFixed(0)}%<br>
+        &middot; pattern ${mutationNames.has('pattern') ? '<span class="mutation">' : ''}${creature.phenotype?.pattern || 0}${mutationNames.has('pattern') ? '</span>' : ''}
+        &middot; armor ${mutationNames.has('armor') ? '<span class="mutation">' : ''}${(creature.phenotype?.armor * 100 || 0).toFixed(0)}%${mutationNames.has('armor') ? '</span>' : ''}<br>
         Size ${creature.genome.size.toFixed(1)} &middot; speed ${creature.genome.speed.toFixed(1)}<br>
         Metabolism ${(creature.genome.metabolism + creature.parts.metabolicCost).toFixed(2)}
         &middot; vision ${creature.parts.vision.toFixed(0)}<br>

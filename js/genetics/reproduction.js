@@ -11,6 +11,8 @@ export function makeChild(parent, world) {
         generation: parent.generation + 1,
         parentId: parent.id,
         lineageId: parent.lineageId,
+        parentGenome: { ...parent.genome, neuralWeights: { ...parent.genome.neuralWeights } },
+        parentPhenotype: { ...parent.phenotype },
         energy: Math.min(genome.maxEnergy * 0.75, randomFloat(55, 80))
     };
 }
