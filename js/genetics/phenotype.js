@@ -62,6 +62,35 @@ export function derivePhenotype(genome) {
     const saturation = clamp(genome.saturation ?? 0.75, 0.35, 1);
     const lightness = clamp(genome.lightness ?? 0.6, 0.35, 0.75);
     const primaryHue = hue(genome.hue);
+
+    // Phase 29: Disease system phenotype
+    const immunity = clamp(genome.immunity ?? 0.4, 0, 1);
+    const diseaseResistance = clamp(genome.diseaseResistance ?? 0.3, 0, 1);
+    const pathogenTolerance = clamp(genome.pathogenTolerance ?? 0.2, 0, 1);
+
+    // Phase 29: Seasonal adaptation phenotype
+    const coldAdaptation = clamp(genome.coldAdaptation ?? 0.45, 0, 1);
+    const heatAdaptation = clamp(genome.heatAdaptation ?? 0.45, 0, 1);
+    const seasonalMetabolism = clamp(genome.seasonalMetabolism ?? 1, 0.5, 1.5);
+
+    // Phase 29: Niche specialization phenotype
+    const burrowing = clamp(genome.burrowing ?? 0, 0, 1);
+    const climbing = clamp(genome.climbing ?? 0, 0, 1);
+    const nocturnal = clamp(genome.nocturnal ?? 0, 0, 1);
+    const waterDepthPreference = clamp(genome.waterDepthPreference ?? 0.5, 0, 1);
+    const surfaceFeeding = clamp(genome.surfaceFeeding ?? 0.55, 0, 1);
+    const deepWaterForaging = clamp(genome.deepWaterForaging ?? 0.3, 0, 1);
+
+    // Compute niche type for rendering and mechanics
+    const nicheType = (() => {
+        if (burrowing > 0.6) return 'burrower';
+        if (climbing > 0.6) return 'climber';
+        if (nocturnal > 0.6) return 'nocturnal';
+        if (waterDepthPreference > 0.7 && deepWaterForaging > 0.5) return 'deepWater';
+        if (waterDepthPreference < 0.3 && surfaceFeeding > 0.6) return 'surfaceFeeder';
+        return 'generalist';
+    })();
+
     return {
         shape, width, length, taper, tail, pattern, patternScale, armor, fin,
         growth: 0.72 + growth * 0.28,
@@ -75,7 +104,21 @@ export function derivePhenotype(genome) {
         mouthSize: clamp(genome.mouthSize ?? 1, 0.55, 1.45),
         finAngle: clamp(genome.finAngle ?? 0, -0.45, 0.45),
         motorLength: clamp(genome.motorLength ?? 1, 0.55, 1.45),
-        state: 'stable'
+        state: 'stable',
+        // Phase 29 additions
+        immunity,
+        diseaseResistance,
+        pathogenTolerance,
+        coldAdaptation,
+        heatAdaptation,
+        seasonalMetabolism,
+        burrowing,
+        climbing,
+        nocturnal,
+        waterDepthPreference,
+        surfaceFeeding,
+        deepWaterForaging,
+        nicheType
     };
 }
 

@@ -63,24 +63,45 @@
                     <span class="label">Species / lineages</span>
                     <span id="diversity" class="value">0 / 0</span>
                 </div>
-                <div class="zone-legend">
-                    <div class="legend-title">Terrain · creatures</div>
-                    <div><i class="zone-swatch meadow"></i>Meadow <span id="meadowCount">0</span></div>
-                    <div><i class="zone-swatch water"></i>Water <span id="waterCount">0</span></div>
-                    <div><i class="zone-swatch rock"></i>Rock/desert <span id="rockCount">0</span></div>
-                </div>
 
-                <div id="eventStatus" class="event-status hidden">
-                    <strong id="eventName">Environmental event</strong>
-                    <span id="eventCountdown"></span>
-                    <small id="eventSummary"></small>
-                </div>
+                            <!-- Seasonal Display -->
+                            <div class="seasonal-display">
+                                <div class="legend-title">Season & Time</div>
+                                <div class="stat-row">
+                                    <span class="label">Season</span>
+                                    <span id="seasonName" class="value">Spring</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="label">Temperature</span>
+                                    <span id="seasonTemp" class="value">20°C</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="label">Time</span>
+                                    <span id="timeOfDay" class="value">Day</span>
+                                </div>
+                                <div class="season-progress">
+                                    <div id="seasonProgressBar" class="progress-bar"></div>
+                                </div>
+                            </div>
 
-                <div class="stat-row">
-                    <span class="label">Speed</span>
-                    <span id="speedDisplay" class="value">1.0x</span>
-                </div>
-            </div>
+                            <div class="zone-legend">
+                                <div class="legend-title">Terrain · creatures</div>
+                                <div><i class="zone-swatch meadow"></i>Meadow <span id="meadowCount">0</span></div>
+                                <div><i class="zone-swatch water"></i>Water <span id="waterCount">0</span></div>
+                                <div><i class="zone-swatch rock"></i>Rock/desert <span id="rockCount">0</span></div>
+                            </div>
+
+                            <div id="eventStatus" class="event-status hidden">
+                                <strong id="eventName">Environmental event</strong>
+                                <span id="eventCountdown"></span>
+                                <small id="eventSummary"></small>
+                            </div>
+
+                            <div class="stat-row">
+                                <span class="label">Speed</span>
+                                <span id="speedDisplay" class="value">1.0x</span>
+                            </div>
+                        </div>
 
             <div id="inspector" class="panel inspector hidden">
                 <div class="inspector-title">Creature inspector <button id="closeInspector" class="close">×</button></div>
@@ -137,6 +158,42 @@
                 </div>
                 <div id="eventLog" class="event-log" role="log" aria-live="polite"></div>
             </div>
+
+                        <!-- Disease HUD -->
+                        <div id="diseasePanel" class="panel disease-panel">
+                            <div class="panel-heading">Disease Surveillance</div>
+                            <div class="stat-row">
+                                <span class="label">Infected</span>
+                                <span id="infectedCount" class="value">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="label">Pathogen load (avg)</span>
+                                <span id="avgPathogenLoad" class="value">0.00</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="label">Disease pressure</span>
+                                <span id="diseasePressure" class="value">0%</span>
+                            </div>
+                            <div class="disease-breakdown">
+                                <div class="legend-title">Active pathogens</div>
+                                <div class="stat-row"><span class="label">Parasite</span><span id="diseaseParasite" class="value">0</span></div>
+                                <div class="stat-row"><span class="label">Virus</span><span id="diseaseVirus" class="value">0</span></div>
+                                <div class="stat-row"><span class="label">Fungus</span><span id="diseaseFungus" class="value">0</span></div>
+                                <div class="stat-row"><span class="label">Bacteria</span><span id="diseaseBacteria" class="value">0</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Niche Distribution -->
+                        <div id="nichePanel" class="panel niche-panel">
+                            <div class="panel-heading">Niche Specialization</div>
+                            <div class="niche-breakdown">
+                                <div class="stat-row"><span class="label">Burrowers</span><span id="nicheBurrowing" class="value">0</span></div>
+                                <div class="stat-row"><span class="label">Climbers</span><span id="nicheClimbing" class="value">0</span></div>
+                                <div class="stat-row"><span class="label">Nocturnal</span><span id="nicheNocturnal" class="value">0</span></div>
+                                <div class="stat-row"><span class="label">Deep water</span><span id="nicheDeepWater" class="value">0</span></div>
+                                <div class="stat-row"><span class="label">Surface feeders</span><span id="nicheSurface" class="value">0</span></div>
+                            </div>
+                        </div>
 
             <!-- Bottom Left: Camera Info -->
             <div id="cameraInfo" class="panel bottom-left">

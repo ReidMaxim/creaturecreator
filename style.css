@@ -547,6 +547,59 @@ canvas {
         padding: 12px;
         font-size: 12px;
     }
+}
+
+/* Phase 29: Seasonal Display */
+.seasonal-display {
+    border-top: 1px solid rgba(255,255,255,0.12);
+    margin-top: 8px;
+    padding-top: 7px;
+    font-size: 11px;
+}
+
+.season-progress {
+    margin-top: 6px;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.season-progress .progress-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+/* Phase 29: Disease Panel */
+.disease-panel {
+    top: 190px;
+    left: 20px;
+    min-width: 160px;
+}
+
+.disease-breakdown {
+    border-top: 1px solid rgba(255,255,255,0.12);
+    margin-top: 8px;
+    padding-top: 7px;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+/* Phase 29: Niche Panel */
+.niche-panel {
+    top: 350px;
+    left: 20px;
+    min-width: 160px;
+}
+
+.niche-breakdown {
+    border-top: 1px solid rgba(255,255,255,0.12);
+    margin-top: 8px;
+    padding-top: 7px;
+    font-size: 11px;
+    line-height: 1.7;
 
     .top-right {
         flex-direction: column;
