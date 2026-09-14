@@ -1,6 +1,7 @@
 import { Genome } from '../genetics/genome.js';
 import { makeChild } from '../genetics/reproduction.js';
 import { random, randomAngle, randomFloat } from '../utils/random.js';
+import { createBodyParts } from '../parts/bodyParts.js';
 
 let nextCreatureId = 1;
 
@@ -10,8 +11,9 @@ export class Creature {
         this.x = x;
         this.y = y;
         this.genome = options.genome instanceof Genome ? options.genome : new Genome(options.genome);
+        this.parts = createBodyParts(this.genome);
         this.size = this.genome.size;
-        this.speed = this.genome.speed;
+        this.speed = this.genome.speed * this.parts.movementFactor;
         this.maxEnergy = this.genome.maxEnergy;
         this.energy = options.energy ?? randomFloat(this.maxEnergy * 0.7, this.maxEnergy);
         this.age = options.age || 0;
@@ -28,13 +30,13 @@ export class Creature {
     update(deltaTime, world) {
         this.age += deltaTime;
         this.reproductionCooldown = Math.max(0, this.reproductionCooldown - deltaTime);
-        this.energy -= deltaTime * this.genome.metabolism;
+        this.energy -= deltaTime * (this.genome.metabolism + this.parts.metabolicCost);
         if (this.energy <= 0 || this.age >= world.settings.maxAge) {
             this.alive = false;
             return;
         }
 
-        const nearbyFood = world.getNearby(this.x, this.y, this.genome.vision, 'food');
+        const nearbyFood = world.getNearby(this.x, this.y, this.parts.vision, 'food');
         if (nearbyFood.length) {
             const target = nearbyFood.reduce((closest, food) =>
                 this.distanceTo(food, world) < this.distanceTo(closest, world) ? food : closest
@@ -58,8 +60,13 @@ export class Creature {
         for (let index = world.food.length - 1; index >= 0; index -= 1) {
             const food = world.food[index];
             if (this.distanceTo(food, world) <= this.size + 6) {
-                this.energy = Math.min(this.maxEnergy, this.energy + food.energy);
-                world.removeFood(index);
+                if (this.parts.eatingEfficiency > 0) {
+                    this.energy = Math.min(
+                        this.maxEnergy,
+                        this.energy + food.energy * this.parts.eatingEfficiency
+                    );
+                    world.removeFood(index);
+                }
                 break;
             }
         }

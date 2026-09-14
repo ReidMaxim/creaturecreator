@@ -52,10 +52,7 @@ python -m http.server 8000
 | Phase | Focus | Status |
 |-------|-------|--------|
 | 1-8 | Playable ecosystem, genetics, reproduction, lineages, inspector | ✅ Complete |
-| 9 | Modular body parts (eyes, mouths, motors) | ⏳ Planned |
-| 10 | Structural mutation (part addition/removal) | ⏳ Planned |
-| 11 | Part costs (trade-offs, balance) | ⏳ Planned |
-| 12 | Sensory systems (what creatures can perceive) | ⏳ Planned |
+| 9-12 | Modular heritable body parts, structural mutation, costs, and sensory systems | ✅ Complete |
 | 13 | Primitive neural brain (simple decision-making) | ⏳ Planned |
 | 14 | Neural mutation (learning to evolve) | ⏳ Planned |
 | 15 | Predation (carnivores, food chains) | ⏳ Planned |
@@ -186,6 +183,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 8 (Evolutionary life simulator)
+**Current Phase:** 12 (Modular body parts and visible traits)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

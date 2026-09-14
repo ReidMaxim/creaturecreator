@@ -161,11 +161,35 @@ export class Renderer {
         this.ctx.arc(0, 0, size, 0, Math.PI * 2);
         this.ctx.fill();
 
-        // Direction indicator (front)
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.beginPath();
-        this.ctx.arc(size * 0.6, 0, size * 0.3, 0, Math.PI * 2);
-        this.ctx.fill();
+        const parts = creature.parts;
+        if (parts && parts.eyes.count) {
+            this.ctx.fillStyle = '#f8fafc';
+            for (let index = 0; index < parts.eyes.count; index += 1) {
+                const spread = (index - (parts.eyes.count - 1) / 2) * size * 0.45;
+                this.ctx.beginPath();
+                this.ctx.arc(size * 0.58, spread, size * (0.12 + parts.eyes.strength * 0.1), 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+        if (parts && parts.mouth.count) {
+            this.ctx.strokeStyle = '#3f172e';
+            this.ctx.lineWidth = Math.max(1, size * 0.08 * parts.mouth.strength);
+            this.ctx.beginPath();
+            this.ctx.arc(size * 0.52, 0, size * (0.16 + parts.mouth.count * 0.06), -0.8, 0.8);
+            this.ctx.stroke();
+        }
+        if (parts && parts.motor.count) {
+            this.ctx.fillStyle = 'rgba(255,255,255,0.35)';
+            for (let index = 0; index < parts.motor.count; index += 1) {
+                const side = index % 2 === 0 ? -1 : 1;
+                this.ctx.beginPath();
+                this.ctx.moveTo(-size * 0.65, side * size * 0.18);
+                this.ctx.lineTo(-size * (1 + parts.motor.strength * 0.35), side * size * 0.5);
+                this.ctx.lineTo(-size * 0.45, side * size * 0.42);
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+        }
 
         // Energy indicator (ring)
         const energyPercent = creature.energy / (creature.maxEnergy || 100);

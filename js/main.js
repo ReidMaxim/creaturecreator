@@ -73,7 +73,13 @@ function inspectCreature(creature) {
         <strong>#${creature.id}</strong> &middot; generation ${creature.generation}<br>
         Age ${creature.age.toFixed(1)}s &middot; energy ${creature.energy.toFixed(0)}<br>
         Size ${creature.genome.size.toFixed(1)} &middot; speed ${creature.genome.speed.toFixed(1)}<br>
-        Metabolism ${creature.genome.metabolism.toFixed(2)} &middot; vision ${creature.genome.vision.toFixed(0)}<br>
+        Metabolism ${(creature.genome.metabolism + creature.parts.metabolicCost).toFixed(2)}
+        &middot; vision ${creature.parts.vision.toFixed(0)}<br>
+        Eyes ${creature.parts.eyes.count} (${creature.parts.eyes.strength.toFixed(2)})
+        &middot; mouth ${creature.parts.mouth.count} (${creature.parts.mouth.strength.toFixed(2)})
+        &middot; motor ${creature.parts.motor.count} (${creature.parts.motor.strength.toFixed(2)})<br>
+        Feeding ${(creature.parts.eatingEfficiency * 100).toFixed(0)}%
+        &middot; movement ${(creature.parts.movementFactor * 100).toFixed(0)}%<br>
         Reproduces at ${creature.genome.reproductionAge.toFixed(1)}s / ${creature.genome.reproductionThreshold.toFixed(0)} energy
     `;
 }
