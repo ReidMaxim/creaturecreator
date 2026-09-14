@@ -81,6 +81,24 @@ export class Renderer {
         this.ctx.fillRect(0, 0, this.width, this.height);
     }
 
+    drawZones(world) {
+        const cell = world.zones.cellSize;
+        const startX = Math.floor((this.camera.x - this.width / this.camera.zoom) / cell) * cell;
+        const startY = Math.floor((this.camera.y - this.height / this.camera.zoom) / cell) * cell;
+        const endX = this.camera.x + this.width / this.camera.zoom;
+        const endY = this.camera.y + this.height / this.camera.zoom;
+        for (let x = startX; x <= endX; x += cell) {
+            for (let y = startY; y <= endY; y += cell) {
+                const zone = world.getZoneAt(x + cell / 2, y + cell / 2);
+                const topLeft = this.worldToScreen(x, y);
+                this.ctx.fillStyle = zone.color;
+                this.ctx.globalAlpha = 0.42;
+                this.ctx.fillRect(topLeft.x, topLeft.y, cell * this.camera.zoom + 1, cell * this.camera.zoom + 1);
+            }
+        }
+        this.ctx.globalAlpha = 1;
+    }
+
     /**
      * Draw world grid (for debugging)
      */
@@ -237,6 +255,7 @@ export class Renderer {
      */
     draw(world) {
         this.clear();
+        this.drawZones(world);
 
         // Draw grid if enabled
         if (this.showGrid) {

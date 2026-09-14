@@ -57,10 +57,19 @@ python -m http.server 8000
 | 14 | Neural mutation (learning to evolve) | ✅ Complete |
 | 15 | Predation (carnivores, food chains) | ✅ Complete |
 | 16 | Plants (living, growing, seeding) | ✅ Complete |
-| 17 | Environmental zones (terrain variation) | ⏳ Planned |
+| 17 | Environmental zones (terrain variation) | ✅ Complete |
 | 18+ | Advanced features (water/land, disasters, species) | 🔮 Future |
 
 Every phase ships as a playable milestone.
+
+### Phase 17: Environmental zones and terrain variation
+
+The toroidal world now has deterministic meadow, water, and rock/desert cells.
+Terrain is visibly painted on the canvas and exposed through a HUD legend.
+Zones lightly affect creature movement and metabolic drain, plant growth and
+density, and food energy. Wrapped zone lookup preserves safe edge queries.
+Predator balance was not changed; predator die-off remains a known behavior.
+See [`docs/PHASE17.md`](./docs/PHASE17.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -102,7 +111,7 @@ creaturecreator/
 │
 ├── js/
 │   ├── main.js               # Bootstrap & event loop
-│   ├── world.js              # World state & physics
+│   ├── world.js              # World state, zones & physics
 │   ├── renderer.js           # Canvas rendering
 │   │
 │   ├── entities/
@@ -135,11 +144,13 @@ creaturecreator/
 │   └── utils/
 │       ├── math.js           # Vector & utility math
 │       ├── random.js         # Seeded RNG
+│       ├── zones.js          # Deterministic terrain zone generation
 │       └── spatialGrid.js    # Performance optimization
 │
 ├── docs/
 │   ├── DESIGN.md             # Architecture & philosophy
-│   └── PHASES.md             # Detailed phase breakdown
+│   ├── PHASES.md             # Detailed phase breakdown
+│   └── PHASE17.md            # Environmental zones implementation notes
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -210,6 +221,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 16 (Plants and growing ecosystems)
+**Current Phase:** 17 (Environmental zones and terrain variation)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

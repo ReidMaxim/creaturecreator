@@ -42,6 +42,9 @@ const elements = {
     averageFitness: document.getElementById('averageFitness'),
     predatorCount: document.getElementById('predatorCount'),
     killCount: document.getElementById('killCount'),
+    meadowCount: document.getElementById('meadowCount'),
+    waterCount: document.getElementById('waterCount'),
+    rockCount: document.getElementById('rockCount'),
     fps: document.getElementById('fps'),
     camX: document.getElementById('camX'),
     camY: document.getElementById('camY'),
@@ -70,6 +73,9 @@ function updateHud() {
     elements.averageFitness.textContent = stats.averageFitness.toFixed(1);
     elements.predatorCount.textContent = stats.predators;
     elements.killCount.textContent = stats.predationKills;
+    elements.meadowCount.textContent = stats.zoneCounts.meadow;
+    elements.waterCount.textContent = stats.zoneCounts.water;
+    elements.rockCount.textContent = stats.zoneCounts.rock;
     elements.speedDisplay.textContent = `${state.speed.toFixed(2)}x`;
     elements.camX.textContent = Math.round(renderer.camera.x);
     elements.camY.textContent = Math.round(renderer.camera.y);

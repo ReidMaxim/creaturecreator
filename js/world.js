@@ -6,12 +6,14 @@
 import { SpatialGrid } from './utils/spatialGrid.js';
 import { Creature } from './entities/creature.js';
 import { Plant } from './entities/plant.js';
+import { createZones, zoneAt, ZONE_DEFINITIONS } from './utils/zones.js';
 
 export class World {
     constructor(width = 3000, height = 3000) {
         // Dimensions
         this.width = width;
         this.height = height;
+        this.zones = createZones(width, height);
 
         // Entity lists
         this.creatures = [];
@@ -123,10 +125,12 @@ export class World {
     spawnFood() {
         if (this.food.length >= this.settings.maxFood) return;
 
+        const x = Math.random() * this.width;
+        const y = Math.random() * this.height;
+        const zone = this.getZoneAt(x, y);
         const food = {
-            x: Math.random() * this.width,
-            y: Math.random() * this.height,
-            energy: this.settings.foodEnergy,
+            x, y,
+            energy: this.settings.foodEnergy * zone.foodDensity,
             id: this.nextFoodId++,
             isFood: true
         };
@@ -136,13 +140,18 @@ export class World {
 
     spawnPlant() {
         if (this.plants.length >= this.settings.maxPlants) return;
-        this.addPlant(new Plant(Math.random() * this.width, Math.random() * this.height));
+        const x = Math.random() * this.width;
+        const y = Math.random() * this.height;
+        const zone = this.getZoneAt(x, y);
+        if (Math.random() > zone.plantDensity) return;
+        this.addPlant(new Plant(x, y, { zoneType: zone.type }));
     }
 
     addPlant(plant) {
         const wrapped = this.wrapPosition(plant.x, plant.y);
         plant.x = wrapped.x;
         plant.y = wrapped.y;
+        plant.zoneType = this.getZoneAt(plant.x, plant.y).type;
         this.plants.push(plant);
     }
 
@@ -154,7 +163,8 @@ export class World {
             parent.x + Math.cos(angle) * distance,
             parent.y + Math.sin(angle) * distance,
             { energy: 2, maxEnergy: parent.maxEnergy, growthRate: parent.growthRate,
-                lifespan: parent.lifespan, seedTimer: 10 + Math.random() * 12 }
+                lifespan: parent.lifespan, seedTimer: 10 + Math.random() * 12,
+                zoneType: parent.zoneType }
         ));
     }
 
@@ -225,6 +235,10 @@ export class World {
         return result;
     }
 
+    getZoneAt(x, y) {
+        return zoneAt(this.zones, this.width, this.height, x, y);
+    }
+
     /**
      * Rebuild spatial grid from all entities
      */
@@ -273,6 +287,8 @@ export class World {
      */
     getStats() {
         const fitnessTotal = this.creatures.reduce((sum, creature) => sum + creature.fitness, 0);
+        const zoneCounts = Object.fromEntries(Object.keys(ZONE_DEFINITIONS).map(type => [type, 0]));
+        for (const creature of this.creatures) zoneCounts[this.getZoneAt(creature.x, creature.y).type] += 1;
         return {
             creatures: this.creatures.length,
             food: this.food.length,
@@ -285,7 +301,8 @@ export class World {
             deaths: this.deaths,
             averageFitness: this.creatures.length ? fitnessTotal / this.creatures.length : 0,
             predators: this.creatures.filter(creature => creature.isPredator).length,
-            predationKills: this.predationKills
+            predationKills: this.predationKills,
+            zoneCounts
         };
     }
 

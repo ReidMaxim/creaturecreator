@@ -141,6 +141,41 @@ canvas {
     padding: 4px 0;
 }
 
+.zone-legend {
+    border-top: 1px solid rgba(255,255,255,0.12);
+    margin-top: 8px;
+    padding-top: 7px;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+.legend-title {
+    color: #cbd5e1;
+    margin-bottom: 2px;
+}
+
+.zone-legend div:not(.legend-title) {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.zone-legend div:not(.legend-title) span {
+    margin-left: auto;
+    color: #e2e8f0;
+}
+
+.zone-swatch {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+}
+
+.zone-swatch.meadow { background: #527d4f; }
+.zone-swatch.water { background: #315d78; }
+.zone-swatch.rock { background: #80654a; }
+
 .stat-row .label {
     opacity: 0.6;
     font-weight: 600;
