@@ -56,11 +56,20 @@ python -m http.server 8000
 | 13 | Primitive neural brain (simple decision-making) | ✅ Complete |
 | 14 | Neural mutation (learning to evolve) | ✅ Complete |
 | 15 | Predation (carnivores, food chains) | ✅ Complete |
-| 16 | Plants (living, growing, seeding) | ⏳ Planned |
+| 16 | Plants (living, growing, seeding) | ✅ Complete |
 | 17 | Environmental zones (terrain variation) | ⏳ Planned |
 | 18+ | Advanced features (water/land, disasters, species) | 🔮 Future |
 
 Every phase ships as a playable milestone.
+
+### Phase 16: Plants and growing ecosystems
+
+Plants grow renewable energy, regrow after grazing, age out, and spread
+deferred seeds across the toroidal world. Herbivores sense and consume plants
+using bounded heritable plant preference and efficiency traits, while
+carnivores continue hunting creatures. Plant count, energy, regrowth controls,
+and visible plant rendering are included in the HUD and canvas. See
+[`docs/PHASE16.md`](./docs/PHASE16.md).
 
 ### Phase 15: Predation and food chains
 
@@ -99,7 +108,7 @@ creaturecreator/
 │   ├── entities/
 │   │   ├── creature.js       # Creature class
 │   │   ├── food.js           # Food class
-│   │   └── plant.js          # Plant class (future)
+│   │   └── plant.js          # Growing, edible, seed-spreading plant
 │   │
 │   ├── genetics/
 │   │   ├── genome.js         # Genetic representation and neural policy weights
@@ -201,6 +210,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 15 (Predation and carnivore food chains)
+**Current Phase:** 16 (Plants and growing ecosystems)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

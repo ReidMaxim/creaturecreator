@@ -144,6 +144,21 @@ export class Renderer {
         this.ctx.stroke();
     }
 
+    drawPlant(plant) {
+        const screen = this.worldToScreen(plant.x, plant.y);
+        const size = (3 + 5 * plant.energy / plant.maxEnergy) * this.camera.zoom;
+        this.ctx.fillStyle = '#65a30d';
+        this.ctx.beginPath();
+        this.ctx.arc(screen.x, screen.y, size, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#bef264';
+        this.ctx.lineWidth = Math.max(1, this.camera.zoom);
+        this.ctx.beginPath();
+        this.ctx.moveTo(screen.x, screen.y + size);
+        this.ctx.lineTo(screen.x, screen.y - size * 1.5);
+        this.ctx.stroke();
+    }
+
     /**
      * Draw creature
      */
@@ -232,6 +247,7 @@ export class Renderer {
         for (const food of world.food) {
             this.drawFood(food);
         }
+        for (const plant of world.plants) this.drawPlant(plant);
 
         // Draw creatures
         for (const creature of world.creatures) {

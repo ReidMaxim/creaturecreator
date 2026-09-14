@@ -26,6 +26,9 @@ for (let index = 0; index < 24; index += 1) {
 for (let index = 0; index < 120; index += 1) {
     world.spawnFood();
 }
+for (let index = 0; index < 150; index += 1) {
+    world.spawnPlant();
+}
 
 const elements = {
     playPause: document.getElementById('playPauseBtn'),
@@ -34,6 +37,8 @@ const elements = {
     creatureCount: document.getElementById('creatureCount'),
     generation: document.getElementById('generation'),
     foodCount: document.getElementById('foodCount'),
+    plantCount: document.getElementById('plantCount'),
+    plantEnergy: document.getElementById('plantEnergy'),
     averageFitness: document.getElementById('averageFitness'),
     predatorCount: document.getElementById('predatorCount'),
     killCount: document.getElementById('killCount'),
@@ -47,6 +52,8 @@ const elements = {
     foodEnergyValue: document.getElementById('foodEnergyValue'),
     maxFood: document.getElementById('maxFood'),
     maxFoodValue: document.getElementById('maxFoodValue'),
+    plantSpawnRate: document.getElementById('plantSpawnRate'),
+    plantSpawnRateValue: document.getElementById('plantSpawnRateValue'),
     inspector: document.getElementById('inspector'),
     inspectorBody: document.getElementById('inspectorBody'),
     closeInspector: document.getElementById('closeInspector')
@@ -58,6 +65,8 @@ function updateHud() {
     elements.creatureCount.textContent = stats.creatures;
     elements.generation.textContent = stats.generation;
     elements.foodCount.textContent = stats.food;
+    elements.plantCount.textContent = stats.plants;
+    elements.plantEnergy.textContent = Math.round(stats.plantEnergy);
     elements.averageFitness.textContent = stats.averageFitness.toFixed(1);
     elements.predatorCount.textContent = stats.predators;
     elements.killCount.textContent = stats.predationKills;
@@ -86,6 +95,8 @@ function inspectCreature(creature) {
         &middot; motor ${creature.parts.motor.count} (${creature.parts.motor.strength.toFixed(2)})<br>
         Feeding ${(creature.parts.eatingEfficiency * 100).toFixed(0)}%
         &middot; movement ${(creature.parts.movementFactor * 100).toFixed(0)}%<br>
+        Plants ${(creature.genome.plantPreference * 100).toFixed(0)}% preference
+        &middot; efficiency ${(creature.genome.plantEfficiency * 100).toFixed(0)}%<br>
         Diet ${creature.isPredator ? 'carnivore' : 'herbivore'}
         (${(creature.genome.diet * 100).toFixed(0)}%) &middot;
         attack ${(creature.parts.bite).toFixed(2)} &middot;
@@ -132,6 +143,9 @@ elements.foodEnergy.addEventListener('input', () =>
 );
 elements.maxFood.addEventListener('input', () =>
     updateSetting(elements.maxFood, elements.maxFoodValue, 'maxFood')
+);
+elements.plantSpawnRate.addEventListener('input', () =>
+    updateSetting(elements.plantSpawnRate, elements.plantSpawnRateValue, 'plantSpawnRate')
 );
 elements.closeInspector.addEventListener('click', () => inspectCreature(null));
 canvas.addEventListener('click', (event) => {
