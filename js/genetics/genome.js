@@ -26,6 +26,16 @@ export const GENE_LIMITS = {
     plantEfficiency: [0.45, 1.25]
 };
 
+export function clampGeneValue(name, value, fallback = null) {
+    const limits = GENE_LIMITS[name];
+    if (!limits) return fallback === null ? value : fallback;
+    const numeric = Number(value);
+    const source = Number.isFinite(numeric) ? numeric : fallback;
+    if (!Number.isFinite(source)) return limits[0];
+    const bounded = Math.max(limits[0], Math.min(limits[1], source));
+    return ['eyeCount', 'mouthCount', 'motorCount'].includes(name) ? Math.round(bounded) : bounded;
+}
+
 // A small policy vector keeps behavior heritable without introducing a
 // heavyweight neural-network runtime. Values are intentionally bounded so a
 // rare mutation cannot make a creature uncontrollable.
@@ -76,6 +86,9 @@ export class Genome {
         this.agility = values.agility ?? randomFloat(0.35, 0.8);
         this.plantPreference = values.plantPreference ?? randomFloat(0.55, 0.95);
         this.plantEfficiency = values.plantEfficiency ?? randomFloat(0.7, 1.05);
+        for (const name of Object.keys(GENE_LIMITS)) {
+            this[name] = clampGeneValue(name, this[name], this[name]);
+        }
         this.neuralWeights = {};
         const inheritedWeights = values.neuralWeights || {};
         for (const name of NEURAL_WEIGHT_NAMES) {
@@ -86,6 +99,7 @@ export class Genome {
                 ? Math.max(-NEURAL_WEIGHT_LIMIT, Math.min(NEURAL_WEIGHT_LIMIT, value))
                 : DEFAULT_NEURAL_WEIGHTS[name];
         }
+
     }
 
     clone() {
@@ -134,3 +148,18 @@ export class Genome {
         return 95 + this.size * 6;
     }
 }
+
+export const CREATOR_TRAITS = [
+    ['size', 'Size', 'body'], ['speed', 'Speed', 'body'], ['metabolism', 'Metabolism', 'body'],
+    ['vision', 'Vision', 'body'], ['hue', 'Hue', 'body'],
+    ['eyeCount', 'Eyes', 'body'], ['eyeStrength', 'Eye strength', 'body'],
+    ['mouthCount', 'Mouths', 'body'], ['mouthStrength', 'Mouth strength', 'body'],
+    ['motorCount', 'Motors', 'body'], ['motorStrength', 'Motor strength', 'body'],
+    ['diet', 'Diet (0 herbivore → 1 carnivore)', 'diet'],
+    ['plantPreference', 'Plant preference', 'diet'], ['plantEfficiency', 'Plant efficiency', 'diet'],
+    ['attack', 'Attack', 'diet'], ['defense', 'Defense', 'diet'], ['agility', 'Agility', 'diet'],
+    ['foodAttraction', 'Food attraction', 'behavior'], ['wander', 'Wander', 'behavior'],
+    ['persistence', 'Persistence', 'behavior'], ['risk', 'Risk', 'behavior'],
+    ['reproductionThreshold', 'Reproduction energy', 'behavior'],
+    ['reproductionAge', 'Reproduction age', 'behavior']
+];

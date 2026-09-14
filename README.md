@@ -66,6 +66,7 @@ python -m http.server 8000
 | 24 | Evolution observability: clusters, lineages, trends, and fitness | ✅ Complete |
 | 22 | Optional sexual reproduction and heritable genome recombination | ✅ Complete |
 | 26 | Deterministic experiments, accessible presentation, and large-population performance | ✅ Complete |
+| 25 | Player creature creator, bounded traits, injection, and local presets | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -142,6 +143,15 @@ JSON snapshots, so experiments can be shared without breaking older saves.
 Rendering now skips entities outside the camera viewport, while focus-visible
 styles, labels, canvas semantics, and reduced-motion handling improve
 accessibility. See [`docs/PHASE26.md`](./docs/PHASE26.md).
+
+### Phase 25: Player creature creator
+
+The HUD includes a player creator for bounded body, diet, and behavior genome
+traits plus safe starting energy and age values. Custom creatures can be
+injected into a running world without bypassing capacity or toroidal topology
+safeguards. Named creator presets are stored locally and do not alter the
+existing version-1 simulation snapshot format. See
+[`docs/PHASE25.md`](./docs/PHASE25.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -225,6 +235,8 @@ creaturecreator/
 │   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
 │   └── PHASE24.md            # Evolution observability
 │   └── PHASE22.md            # Optional sexual reproduction and recombination
+│   ├── PHASE22.md            # Optional sexual reproduction and recombination
+│   └── PHASE25.md            # Player creator tools and local creature presets
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```

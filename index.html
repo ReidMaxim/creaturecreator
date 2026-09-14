@@ -128,9 +128,29 @@
                     <button id="importBtn" class="btn">Import</button>
                     <input id="importFile" type="file" accept="application/json,.json" hidden>
                 </div>
-                <textarea id="snapshotText" rows="3" placeholder="Paste a Creature Creator JSON export here"></textarea>
-                <span id="persistenceStatus" class="persistence-status" role="status"></span>
-            </div>
+                    <textarea id="snapshotText" rows="3" placeholder="Paste a Creature Creator JSON export here"></textarea>
+                    <span id="persistenceStatus" class="persistence-status" role="status"></span>
+                </div>
+
+                <div id="creatorPanel" class="panel creator-panel">
+                    <div class="panel-heading">Player creature creator</div>
+                    <label class="creator-name">Preset name <input id="creatorName" type="text" maxlength="32" value="My creature"></label>
+                    <div id="creatorTraits" class="creator-traits"></div>
+                    <div class="creator-start">
+                        <label>Starting energy <input id="creatorEnergy" type="number" min="1" max="227" step="1" value="100"></label>
+                        <label>Starting age <input id="creatorAge" type="number" min="0" max="180" step="0.1" value="0"></label>
+                    </div>
+                    <div class="button-row">
+                        <button id="creatorInject" class="btn btn-primary">Inject into world</button>
+                        <button id="creatorSave" class="btn">Save preset</button>
+                        <button id="creatorLoad" class="btn">Load preset</button>
+                        <button id="creatorClear" class="btn">Clear</button>
+                    </div>
+                    <select id="creatorPresets" class="select" aria-label="Saved creature presets">
+                        <option value="">No saved presets</option>
+                    </select>
+                    <span id="creatorStatus" class="persistence-status" role="status"></span>
+                </div>
 
             <div id="historyPanel" class="panel history-panel">
                 <div class="panel-heading">Population history</div>

@@ -3,6 +3,7 @@ import { Renderer } from './renderer.js';
 import { World, SIMULATION_PRESETS } from './world.js';
 import { randomFloat, setRandomSeed } from './utils/random.js';
 import { getEvolutionAnalytics, formatAnalyticsNumber, TRAITS } from './analytics.js';
+import { Genome, GENE_LIMITS, CREATOR_TRAITS, clampGeneValue } from './genetics/genome.js';
 
 const canvas = document.getElementById('canvas');
 const world = new World();
@@ -19,6 +20,7 @@ const state = {
     history: []
 };
 const STORAGE_KEY = 'creature-creator-phase19-save';
+const CREATOR_STORAGE_KEY = 'creature-creator-phase25-presets';
 const PREFERENCES_KEY = 'creature-creator-phase20-preferences';
 const INITIAL_COUNTS = { creatures: 24, food: 120, plants: 150 };
 
@@ -105,6 +107,16 @@ const elements = {
     ,seed: document.getElementById('seed')
     ,experimentLabel: document.getElementById('experimentLabel')
     ,applySeed: document.getElementById('applySeed')
+    ,creatorName: document.getElementById('creatorName')
+    ,creatorTraits: document.getElementById('creatorTraits')
+    ,creatorEnergy: document.getElementById('creatorEnergy')
+    ,creatorAge: document.getElementById('creatorAge')
+    ,creatorInject: document.getElementById('creatorInject')
+    ,creatorSave: document.getElementById('creatorSave')
+    ,creatorLoad: document.getElementById('creatorLoad')
+    ,creatorClear: document.getElementById('creatorClear')
+    ,creatorPresets: document.getElementById('creatorPresets')
+    ,creatorStatus: document.getElementById('creatorStatus')
 };
 
 try {
@@ -253,6 +265,124 @@ function importSnapshot(text) {
         setPersistenceStatus(`Import failed: ${error.message}`, true);
     }
 }
+
+function creatorStatus(message, error = false) {
+    elements.creatorStatus.textContent = message;
+    elements.creatorStatus.style.color = error ? '#fca5a5' : '#86efac';
+}
+
+function renderCreatorTraits(values = {}) {
+    const defaults = new Genome();
+    elements.creatorTraits.replaceChildren(...CREATOR_TRAITS.map(([name, label, group]) => {
+        const limits = GENE_LIMITS[name];
+        const input = document.createElement('input');
+        input.id = `creator-${name}`;
+        input.dataset.trait = name;
+        input.type = 'number';
+        input.min = limits[0];
+        input.max = limits[1];
+        input.step = ['eyeCount', 'mouthCount', 'motorCount'].includes(name) ? '1' : '0.01';
+        input.value = clampGeneValue(name, values[name], defaults[name]);
+        input.title = `Allowed: ${limits[0]}–${limits[1]}`;
+        const wrapper = document.createElement('label');
+        wrapper.className = `creator-trait ${group}`;
+        wrapper.textContent = label;
+        wrapper.appendChild(input);
+        return wrapper;
+    }));
+}
+
+function creatorValues() {
+    const values = {};
+    for (const [name] of CREATOR_TRAITS) {
+        const input = document.getElementById(`creator-${name}`);
+        const number = Number(input.value);
+        if (!Number.isFinite(number)) throw new Error(`${name} must be a number.`);
+        values[name] = clampGeneValue(name, number);
+    }
+    const energy = Number(elements.creatorEnergy.value);
+    const age = Number(elements.creatorAge.value);
+    if (!Number.isFinite(energy) || energy < 1 || energy > 227) throw new Error('Starting energy must be 1–227.');
+    if (!Number.isFinite(age) || age < 0 || age > 180) throw new Error('Starting age must be 0–180.');
+    return { genome: values, energy, age };
+}
+
+function readCreatorPresets() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(CREATOR_STORAGE_KEY) || '{}');
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch (error) {
+        creatorStatus(`Preset storage unavailable: ${error.message}`, true);
+        return {};
+    }
+}
+
+function refreshCreatorPresets() {
+    const presets = readCreatorPresets();
+    elements.creatorPresets.replaceChildren(new Option('Select saved preset', ''));
+    Object.keys(presets).sort().forEach(name => elements.creatorPresets.appendChild(new Option(name, name)));
+}
+
+function injectCreator() {
+    try {
+        const values = creatorValues();
+        if (world.creatures.length >= world.settings.maxCreatures) {
+            throw new Error(`World capacity reached (${world.settings.maxCreatures}).`);
+        }
+        const creature = new Creature(randomFloat(0, world.width), randomFloat(0, world.height), values);
+        if (!world.injectCreature(creature)) throw new Error('Creature could not be added safely.');
+        inspectCreature(creature);
+        updateHud();
+        creatorStatus(`Injected creature #${creature.id}.`);
+    } catch (error) {
+        creatorStatus(`Invalid creature: ${error.message}`, true);
+    }
+}
+
+function saveCreatorPreset() {
+    try {
+        const name = elements.creatorName.value.trim();
+        if (!name) throw new Error('Enter a preset name.');
+        const values = creatorValues();
+        const presets = readCreatorPresets();
+        presets[name] = values;
+        localStorage.setItem(CREATOR_STORAGE_KEY, JSON.stringify(presets));
+        refreshCreatorPresets();
+        elements.creatorPresets.value = name;
+        creatorStatus(`Saved preset “${name}”.`);
+    } catch (error) {
+        creatorStatus(`Preset not saved: ${error.message}`, true);
+    }
+}
+
+function loadCreatorPreset() {
+    const name = elements.creatorPresets.value;
+    const preset = name && readCreatorPresets()[name];
+    if (!preset || !preset.genome) {
+        creatorStatus('Select a saved preset first.', true);
+        return;
+    }
+    renderCreatorTraits(preset.genome);
+    elements.creatorName.value = name;
+    elements.creatorEnergy.value = Math.max(1, Math.min(227, Number(preset.energy) || 100));
+    elements.creatorAge.value = Math.max(0, Math.min(180, Number(preset.age) || 0));
+    creatorStatus(`Loaded preset “${name}”.`);
+}
+
+function clearCreator() {
+    elements.creatorName.value = 'My creature';
+    elements.creatorEnergy.value = 100;
+    elements.creatorAge.value = 0;
+    renderCreatorTraits();
+    creatorStatus('Creator reset to safe defaults.');
+}
+
+renderCreatorTraits();
+refreshCreatorPresets();
+elements.creatorInject.addEventListener('click', injectCreator);
+elements.creatorSave.addEventListener('click', saveCreatorPreset);
+elements.creatorLoad.addEventListener('click', loadCreatorPreset);
+elements.creatorClear.addEventListener('click', clearCreator);
 
 elements.save.addEventListener('click', saveToLocalStorage);
 elements.load.addEventListener('click', loadFromLocalStorage);
