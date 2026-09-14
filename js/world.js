@@ -68,6 +68,10 @@ export class World {
         this.maxGeneration = 0;
         this.settings.maxAge = 180;
         this.settings.mutationRate = 0.08;
+        this.settings.reproductionMode = 'asexual';
+        this.settings.mateRange = 34;
+        this.settings.mateCooldown = 6;
+        this.settings.mateEnergyCost = 28;
         this.event = null;
         this.nextEventAt = this.time + 38 + Math.random() * 18;
         this.eventHistory = [];
@@ -218,6 +222,24 @@ export class World {
         if (this.creatures.length + this.pendingBirths.length < this.settings.maxCreatures) {
             this.pendingBirths.push(child);
         }
+    }
+
+    getCompatibleMate(creature) {
+        if (this.settings.reproductionMode !== 'sexual') return null;
+        let mate = null;
+        let closest = this.settings.mateRange;
+        for (const candidate of this.getNearby(creature.x, creature.y, closest, 'creatures')) {
+            if (candidate === creature || !candidate.alive || candidate.reproductionCooldown > 0 ||
+                candidate.sex === creature.sex || candidate.isPredator !== creature.isPredator ||
+                candidate.age < candidate.genome.reproductionAge ||
+                candidate.energy < candidate.genome.reproductionThreshold) continue;
+            const distance = creature.distanceTo(candidate, this);
+            if (distance < closest) {
+                closest = distance;
+                mate = candidate;
+            }
+        }
+        return mate;
     }
 
     /**
@@ -405,6 +427,7 @@ export class World {
             zoneCounts,
             species: species.size,
             lineages: lineages.size,
+            reproductionMode: this.settings.reproductionMode === 'sexual' ? 'sexual' : 'asexual',
             event: this.event
         };
     }
@@ -437,6 +460,7 @@ export class World {
             deaths: this.deaths,
             predationKills: this.predationKills,
             maxGeneration: this.maxGeneration,
+            reproductionMode: this.settings.reproductionMode,
             nextEventAt: this.nextEventAt,
             event: this.event ? { ...this.event, effects: { ...this.event.effects } } : null,
             eventHistory: [...this.eventHistory],
@@ -446,6 +470,8 @@ export class World {
                 genome: { ...creature.genome, neuralWeights: { ...creature.genome.neuralWeights } },
                 energy: creature.energy, age: creature.age, generation: creature.generation,
                 parentId: creature.parentId, lineageId: creature.lineageId,
+                parentIds: creature.parentIds ? [...creature.parentIds] : null,
+                sex: creature.sex,
                 rotation: creature.rotation, alive: creature.alive,
                 attackCooldown: creature.attackCooldown,
                 reproductionCooldown: creature.reproductionCooldown,
@@ -507,6 +533,7 @@ export class World {
         this.spatialGrid = new SpatialGrid(this.width, this.height, 200);
         this.settings = { ...this.settings, ...(snapshot.settings || {}), worldSize: this.width };
         if (!PRESET_NAMES.includes(this.settings.preset)) this.settings.preset = 'sandbox';
+        if (this.settings.reproductionMode !== 'sexual') this.settings.reproductionMode = 'asexual';
         this.time = Math.max(0, finite(snapshot.time));
         this.tick = Math.max(0, Math.floor(finite(snapshot.tick)));
         this.foodSpawnAccumulator = Math.max(0, finite(snapshot.foodSpawnAccumulator));
@@ -532,6 +559,10 @@ export class World {
                 age: finite(data.age), generation: finite(data.generation),
                 parentId: data.parentId, lineageId: data.lineageId
             });
+            creature.parentIds = Array.isArray(data.parentIds) ? data.parentIds.slice(0, 2) : (
+                data.parentId ? [data.parentId] : []
+            );
+            if (data.sex === 'male' || data.sex === 'female') creature.sex = data.sex;
             creature.rotation = finite(data.rotation);
             creature.alive = data.alive !== false;
             creature.attackCooldown = Math.max(0, finite(data.attackCooldown));

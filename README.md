@@ -63,6 +63,7 @@ python -m http.server 8000
 | 19 | Persistence, JSON import/export, and population history | ✅ Complete |
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
+| 22 | Optional sexual reproduction and heritable genome recombination | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -112,6 +113,15 @@ Custom capacity and pressure sliders remain available for experiments, and the
 selected preset is retained in preferences and serialized snapshots. The HUD
 reports resource pressure and the predator-to-herbivore population ratio so
 long-running outcomes are measurable. See [`docs/PHASE21.md`](./docs/PHASE21.md).
+
+### Phase 22: Optional sexual reproduction
+
+The reproduction control can switch between the compatible legacy asexual
+mode and sexual mating. Sexual mates seek compatible nearby partners, pay
+bounded costs, observe cooldowns, and produce deferred offspring with
+recombined genomes, mutation, and two-parent metadata. The HUD and inspector
+expose the active mode and ancestry. See
+[`docs/PHASE22.md`](./docs/PHASE22.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -191,7 +201,8 @@ creaturecreator/
 │   ├── PHASE18.md            # Environmental events and diversity notes
 │   ├── PHASE19.md            # Persistence and population history notes
 │   ├── PHASE20.md            # Experiment controls and live analytics notes
-│   └── PHASE21.md            # Ecosystem balance controls and resource analytics
+│   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
+│   └── PHASE22.md            # Optional sexual reproduction and recombination
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -262,6 +273,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 20 (Experiment controls and live analytics)
+**Current Phase:** 22 (Optional sexual reproduction)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

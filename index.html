@@ -28,6 +28,10 @@
                     <span id="generation" class="value">0</span>
                 </div>
                 <div class="stat-row">
+                    <span class="label">Reproduction</span>
+                    <span id="reproductionModeDisplay" class="value">asexual</span>
+                </div>
+                <div class="stat-row">
                     <span class="label">Food</span>
                     <span id="foodCount" class="value">0</span>
                 </div>
@@ -155,6 +159,13 @@
 
             <!-- Bottom Right: Environment Controls -->
             <div id="envControls" class="panel bottom-right">
+                <div class="control-group">
+                    <label for="reproductionMode">Reproduction mode</label>
+                    <select id="reproductionMode" class="select">
+                        <option value="asexual" selected>Asexual (clone + mutation)</option>
+                        <option value="sexual">Sexual (mate + recombination)</option>
+                    </select>
+                </div>
                 <div class="control-group">
                     <label for="preset">Simulation preset</label>
                     <select id="preset" class="select">
