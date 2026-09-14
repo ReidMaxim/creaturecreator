@@ -26,5 +26,11 @@ export function createBodyParts(genome) {
         metabolicCost: (eyes.count * eyes.strength * 0.08)
             + (mouth.count * mouth.strength * 0.06)
             + (motor.count * motor.strength * 0.12)
+            + genome.diet * 0.12 + genome.attack * 0.08,
+        bite: genome.mouthCount
+            ? Math.min(1.5, genome.attack * (0.35 + genome.mouthCount * genome.mouthStrength * 0.45))
+            : 0,
+        defense: Math.min(1.5, genome.defense * (0.6 + genome.size / 30)),
+        agility: Math.min(1.5, genome.agility * (0.65 + motor.count * motor.strength * 0.18))
     };
 }

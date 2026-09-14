@@ -22,10 +22,34 @@ export function senseCreature(creature, world) {
         }
     }
 
+    let prey = null;
+    let threat = null;
+    let preyDistance = vision;
+    let threatDistance = vision;
+    for (const candidate of world.getNearby(creature.x, creature.y, vision, 'creatures')) {
+        if (candidate === creature || !candidate.alive) continue;
+        const { dx, dy } = toroidalDelta(creature, candidate, world);
+        const distance = Math.hypot(dx, dy);
+        if (candidate.genome.diet < creature.genome.diet - 0.08 && distance < preyDistance) {
+            preyDistance = distance;
+            prey = { direction: Math.atan2(dy, dx), distance };
+        }
+        if (candidate.genome.diet > creature.genome.diet + 0.08 && distance < threatDistance) {
+            threatDistance = distance;
+            threat = { direction: Math.atan2(dy, dx), distance };
+        }
+    }
+
     return {
         foodDirection: food ? food.direction : creature.rotation,
         foodDistance: food ? food.distance / Math.max(vision, 1) : 1,
         foodVisible: Boolean(food),
+        preyDirection: prey ? prey.direction : creature.rotation,
+        preyDistance: prey ? prey.distance / Math.max(vision, 1) : 1,
+        preyVisible: Boolean(prey),
+        threatDirection: threat ? threat.direction : creature.rotation,
+        threatDistance: threat ? threat.distance / Math.max(vision, 1) : 1,
+        threatVisible: Boolean(threat),
         energy: creature.energy / creature.maxEnergy,
         age: creature.age / Math.max(world.settings.maxAge, 1)
     };

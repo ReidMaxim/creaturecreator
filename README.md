@@ -55,12 +55,22 @@ python -m http.server 8000
 | 9-12 | Modular heritable body parts, structural mutation, costs, and sensory systems | ✅ Complete |
 | 13 | Primitive neural brain (simple decision-making) | ✅ Complete |
 | 14 | Neural mutation (learning to evolve) | ✅ Complete |
-| 15 | Predation (carnivores, food chains) | ⏳ Planned |
+| 15 | Predation (carnivores, food chains) | ✅ Complete |
 | 16 | Plants (living, growing, seeding) | ⏳ Planned |
 | 17 | Environmental zones (terrain variation) | ⏳ Planned |
 | 18+ | Advanced features (water/land, disasters, species) | 🔮 Future |
 
 Every phase ships as a playable milestone.
+
+### Phase 15: Predation and food chains
+
+Diet, bite/attack, defense, and agility are bounded heritable genome traits.
+Carnivores detect and pursue nearby prey, attack at close range on a cooldown,
+and recover energy from kills. Herbivores prioritize plants and flee detected
+predators; toroidal spatial queries and deferred death/birth processing keep
+updates safe. Predator rings, diet labels, kill totals, and per-creature kills
+are visible in the renderer, HUD, and inspector. See
+[`docs/PHASE15.md`](./docs/PHASE15.md) for implementation notes.
 
 ### Phase 14: Neural mutation
 
@@ -83,7 +93,6 @@ creaturecreator/
 │
 ├── js/
 │   ├── main.js               # Bootstrap & event loop
-│   ├── simulation.js         # Core tick logic
 │   ├── world.js              # World state & physics
 │   ├── renderer.js           # Canvas rendering
 │   │
@@ -192,6 +201,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 14 (Neural mutation and learning-to-evolve policies)
+**Current Phase:** 15 (Predation and carnivore food chains)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

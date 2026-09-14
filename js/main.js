@@ -35,6 +35,8 @@ const elements = {
     generation: document.getElementById('generation'),
     foodCount: document.getElementById('foodCount'),
     averageFitness: document.getElementById('averageFitness'),
+    predatorCount: document.getElementById('predatorCount'),
+    killCount: document.getElementById('killCount'),
     fps: document.getElementById('fps'),
     camX: document.getElementById('camX'),
     camY: document.getElementById('camY'),
@@ -57,6 +59,8 @@ function updateHud() {
     elements.generation.textContent = stats.generation;
     elements.foodCount.textContent = stats.food;
     elements.averageFitness.textContent = stats.averageFitness.toFixed(1);
+    elements.predatorCount.textContent = stats.predators;
+    elements.killCount.textContent = stats.predationKills;
     elements.speedDisplay.textContent = `${state.speed.toFixed(2)}x`;
     elements.camX.textContent = Math.round(renderer.camera.x);
     elements.camY.textContent = Math.round(renderer.camera.y);
@@ -82,6 +86,10 @@ function inspectCreature(creature) {
         &middot; motor ${creature.parts.motor.count} (${creature.parts.motor.strength.toFixed(2)})<br>
         Feeding ${(creature.parts.eatingEfficiency * 100).toFixed(0)}%
         &middot; movement ${(creature.parts.movementFactor * 100).toFixed(0)}%<br>
+        Diet ${creature.isPredator ? 'carnivore' : 'herbivore'}
+        (${(creature.genome.diet * 100).toFixed(0)}%) &middot;
+        attack ${(creature.parts.bite).toFixed(2)} &middot;
+        defense ${(creature.parts.defense).toFixed(2)}<br>
         Brain genes: food ${(creature.genome.foodAttraction).toFixed(2)}
         &middot; wander ${(creature.genome.wander).toFixed(2)}
         &middot; persistence ${(creature.genome.persistence).toFixed(2)}
@@ -91,6 +99,7 @@ function inspectCreature(creature) {
             .map(([name, value]) => `${name} ${value.toFixed(2)}`).join(' &middot; ')}<br>
         Fitness ${creature.fitness.toFixed(1)}
         &middot; food eaten ${creature.behaviorStats.foodEaten}
+        &middot; kills ${creature.behaviorStats.kills}
         &middot; travel ${creature.behaviorStats.distanceTravelled.toFixed(0)}<br>
         Action: turn ${(creature.brain.lastAction.turn).toFixed(2)}
         &middot; thrust ${(creature.brain.lastAction.thrust).toFixed(2)}<br>

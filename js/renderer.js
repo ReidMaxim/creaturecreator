@@ -161,6 +161,14 @@ export class Renderer {
         this.ctx.arc(0, 0, size, 0, Math.PI * 2);
         this.ctx.fill();
 
+        if (creature.isPredator) {
+            this.ctx.strokeStyle = '#f97316';
+            this.ctx.lineWidth = Math.max(1.5, size * 0.16);
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, size + 1, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+
         const parts = creature.parts;
         if (parts && parts.eyes.count) {
             this.ctx.fillStyle = '#f8fafc';
