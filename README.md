@@ -58,7 +58,8 @@ python -m http.server 8000
 | 15 | Predation (carnivores, food chains) | ✅ Complete |
 | 16 | Plants (living, growing, seeding) | ✅ Complete |
 | 17 | Environmental zones (terrain variation) | ✅ Complete |
-| 18+ | Advanced features (water/land, disasters, species) | 🔮 Future |
+| 18 | Environmental events and species/lineage diversity | ✅ Complete |
+| 19+ | Advanced ecosystem features and persistence | 🔮 Future |
 
 Every phase ships as a playable milestone.
 
@@ -70,6 +71,15 @@ Zones lightly affect creature movement and metabolic drain, plant growth and
 density, and food energy. Wrapped zone lookup preserves safe edge queries.
 Predator balance was not changed; predator die-off remains a known behavior.
 See [`docs/PHASE17.md`](./docs/PHASE17.md).
+
+### Phase 18: Environmental events and diversity
+
+Periodic droughts, algal blooms, and storms add visible, bounded pressure to
+the existing food-and-plant ecosystem. The active event shows its countdown in
+the HUD and applies lightweight growth, spawn, movement, or energy modifiers;
+the renderer adds a subtle event tint. Live species signatures and inherited
+lineage roots are tracked for population diversity without changing predator
+balance. See [`docs/PHASE18.md`](./docs/PHASE18.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -111,7 +121,7 @@ creaturecreator/
 │
 ├── js/
 │   ├── main.js               # Bootstrap & event loop
-│   ├── world.js              # World state, zones & physics
+│   ├── world.js              # World state, zones, events & physics
 │   ├── renderer.js           # Canvas rendering
 │   │
 │   ├── entities/
@@ -150,7 +160,8 @@ creaturecreator/
 ├── docs/
 │   ├── DESIGN.md             # Architecture & philosophy
 │   ├── PHASES.md             # Detailed phase breakdown
-│   └── PHASE17.md            # Environmental zones implementation notes
+│   ├── PHASE17.md            # Environmental zones implementation notes
+│   └── PHASE18.md            # Environmental events and diversity notes
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```
@@ -221,6 +232,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 17 (Environmental zones and terrain variation)
+**Current Phase:** 18 (Environmental events and diversity)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim

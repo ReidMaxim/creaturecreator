@@ -21,6 +21,7 @@ export class Creature {
         this.age = options.age || 0;
         this.generation = options.generation || 0;
         this.parentId = options.parentId || null;
+        this.lineageId = options.lineageId || this.parentId || this.id;
         this.rotation = randomAngle();
         this.alive = true;
         this.isCreature = true;
@@ -41,7 +42,9 @@ export class Creature {
         this.reproductionCooldown = Math.max(0, this.reproductionCooldown - deltaTime);
         this.attackCooldown = Math.max(0, this.attackCooldown - deltaTime);
         const zone = world.getZoneAt(this.x, this.y);
-        this.energy -= deltaTime * (this.genome.metabolism + this.parts.metabolicCost) * zone.energyDrain;
+        const effects = world.getEnvironmentEffects();
+        this.energy -= deltaTime * (this.genome.metabolism + this.parts.metabolicCost)
+            * zone.energyDrain * effects.energyDrain;
         if (this.energy <= 0 || this.age >= world.settings.maxAge) {
             this.alive = false;
             return;
@@ -52,12 +55,15 @@ export class Creature {
         this.rotation += action.turn * (1.8 + this.genome.persistence * 0.35) * deltaTime;
 
         const position = world.wrapPosition(
-            this.x + Math.cos(this.rotation) * this.speed * zone.movement * action.thrust * deltaTime,
-            this.y + Math.sin(this.rotation) * this.speed * zone.movement * action.thrust * deltaTime
+            this.x + Math.cos(this.rotation) * this.speed * zone.movement
+                * effects.movement * action.thrust * deltaTime,
+            this.y + Math.sin(this.rotation) * this.speed * zone.movement
+                * effects.movement * action.thrust * deltaTime
         );
         this.x = position.x;
         this.y = position.y;
-        this.behaviorStats.distanceTravelled += this.speed * zone.movement * action.thrust * deltaTime;
+        this.behaviorStats.distanceTravelled += this.speed * zone.movement
+            * effects.movement * action.thrust * deltaTime;
 
         if (!this.isPredator) {
             for (const plant of world.getNearby(this.x, this.y, this.size + 8, 'plants')) {

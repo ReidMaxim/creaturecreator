@@ -10,6 +10,7 @@ export function makeChild(parent, world) {
         genome,
         generation: parent.generation + 1,
         parentId: parent.id,
+        lineageId: parent.lineageId,
         energy: Math.min(genome.maxEnergy * 0.75, randomFloat(55, 80))
     };
 }

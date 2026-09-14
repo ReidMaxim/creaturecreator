@@ -256,6 +256,7 @@ export class Renderer {
     draw(world) {
         this.clear();
         this.drawZones(world);
+        if (world.event) this.drawEventEffect(world.event);
 
         // Draw grid if enabled
         if (this.showGrid) {
@@ -272,6 +273,17 @@ export class Renderer {
         for (const creature of world.creatures) {
             this.drawCreature(creature);
         }
+    }
+
+    drawEventEffect(event) {
+        this.ctx.fillStyle = event.type === 'storm'
+            ? 'rgba(96, 165, 250, 0.08)'
+            : event.type === 'drought' ? 'rgba(245, 158, 11, 0.06)' : 'rgba(34, 197, 94, 0.05)';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = event.color;
+        this.ctx.globalAlpha = 0.8;
+        this.ctx.fillRect(0, 0, this.width, 3);
+        this.ctx.globalAlpha = 1;
     }
 
     /**
