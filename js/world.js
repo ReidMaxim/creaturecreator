@@ -7,6 +7,7 @@ import { SpatialGrid } from './utils/spatialGrid.js';
 import { Creature } from './entities/creature.js';
 import { Plant } from './entities/plant.js';
 import { createZones, zoneAt, ZONE_DEFINITIONS } from './utils/zones.js';
+import { compareGenomeGenes, lineageColor, phenotypeSnapshot } from './genetics/phenotype.js';
 
 export const SIMULATION_PRESETS = {
     balanced: {
@@ -72,6 +73,7 @@ export class World {
         this.nextEventAt = this.time + 38 + Math.random() * 18;
         this.eventHistory = [];
         this.analyticsLog = [];
+        this.evolutionHistory = [];
     }
 
     applyPreset(name) {
@@ -113,7 +115,9 @@ export class World {
         this.creatures = living;
         this.plants = this.plants.filter(plant => plant.alive);
         for (const child of this.pendingBirths.splice(0)) {
-            this.addCreature(new Creature(child.x, child.y, child));
+            const creature = new Creature(child.x, child.y, child);
+            this.addCreature(creature);
+            this.recordEvolution(creature);
             this.births += 1;
         }
         for (const seed of this.pendingPlantSeeds.splice(0)) this.addPlant(seed);
@@ -218,6 +222,21 @@ export class World {
         if (this.creatures.length + this.pendingBirths.length < this.settings.maxCreatures) {
             this.pendingBirths.push(child);
         }
+    }
+
+    recordEvolution(creature) {
+        this.evolutionHistory.push({
+            id: creature.id,
+            parentId: creature.parentId,
+            lineageId: creature.lineageId,
+            lineageColor: lineageColor(creature.lineageId),
+            generation: creature.generation,
+            time: this.time,
+            phenotype: phenotypeSnapshot(creature.phenotype),
+            parentPhenotype: phenotypeSnapshot(creature.parentPhenotype || {}),
+            mutations: compareGenomeGenes(creature.parentGenome, creature.genome)
+        });
+        if (this.evolutionHistory.length > 160) this.evolutionHistory.shift();
     }
 
     /**
@@ -441,11 +460,21 @@ export class World {
             event: this.event ? { ...this.event, effects: { ...this.event.effects } } : null,
             eventHistory: [...this.eventHistory],
             analyticsLog: this.analyticsLog.map(entry => ({ ...entry })),
+            evolutionHistory: this.evolutionHistory.map(entry => ({
+                ...entry,
+                phenotype: { ...entry.phenotype },
+                parentPhenotype: { ...entry.parentPhenotype },
+                mutations: Array.isArray(entry.mutations)
+                    ? entry.mutations.map(change => ({ ...change })) : []
+            })),
             creatures: this.creatures.map(creature => ({
                 id: creature.id, x: creature.x, y: creature.y,
                 genome: { ...creature.genome, neuralWeights: { ...creature.genome.neuralWeights } },
                 energy: creature.energy, age: creature.age, generation: creature.generation,
                 parentId: creature.parentId, lineageId: creature.lineageId,
+                parentGenome: creature.parentGenome
+                    ? { ...creature.parentGenome, neuralWeights: { ...creature.parentGenome.neuralWeights } } : null,
+                parentPhenotype: creature.parentPhenotype ? { ...creature.parentPhenotype } : null,
                 rotation: creature.rotation, alive: creature.alive,
                 attackCooldown: creature.attackCooldown,
                 reproductionCooldown: creature.reproductionCooldown,
@@ -522,6 +551,16 @@ export class World {
         this.analyticsLog = Array.isArray(snapshot.analyticsLog)
             ? snapshot.analyticsLog.slice(-40).filter(entry => entry && typeof entry.message === 'string')
             : [];
+        this.evolutionHistory = Array.isArray(snapshot.evolutionHistory)
+            ? snapshot.evolutionHistory.slice(-160)
+                .filter(entry => entry && Number.isFinite(Number(entry.id)))
+                .map(entry => ({
+                    ...entry,
+                    phenotype: phenotypeSnapshot(entry.phenotype),
+                    parentPhenotype: phenotypeSnapshot(entry.parentPhenotype),
+                    mutations: Array.isArray(entry.mutations) ? entry.mutations.slice(0, 24) : []
+                }))
+            : [];
         this.pendingBirths = [];
         this.pendingPlantSeeds = [];
         this.creatures = snapshot.creatures.map(data => {
@@ -530,7 +569,8 @@ export class World {
             const creature = new Creature(Number(data.x), Number(data.y), {
                 id: data.id, genome: data.genome, energy: finite(data.energy),
                 age: finite(data.age), generation: finite(data.generation),
-                parentId: data.parentId, lineageId: data.lineageId
+                parentId: data.parentId, lineageId: data.lineageId,
+                parentGenome: data.parentGenome, parentPhenotype: data.parentPhenotype
             });
             creature.rotation = finite(data.rotation);
             creature.alive = data.alive !== false;

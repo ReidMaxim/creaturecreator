@@ -3,7 +3,7 @@ import { makeChild } from '../genetics/reproduction.js';
 import { randomAngle, randomFloat } from '../utils/random.js';
 import { createBodyParts } from '../parts/bodyParts.js';
 import { DecisionBrain } from '../brain/brain.js';
-import { derivePhenotype, phenotypeState } from '../genetics/phenotype.js';
+import { derivePhenotype, lineageColor, phenotypeState } from '../genetics/phenotype.js';
 
 let nextCreatureId = 1;
 
@@ -27,6 +27,9 @@ export class Creature {
         this.generation = options.generation || 0;
         this.parentId = options.parentId || null;
         this.lineageId = options.lineageId || this.parentId || this.id;
+        this.lineageColor = lineageColor(this.lineageId);
+        this.parentGenome = options.parentGenome || null;
+        this.parentPhenotype = options.parentPhenotype || null;
         this.rotation = randomAngle();
         this.alive = true;
         this.isCreature = true;
