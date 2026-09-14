@@ -64,6 +64,8 @@ python -m http.server 8000
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
 | 24 | Evolution observability: clusters, lineages, trends, and fitness | ✅ Complete |
+| 22 | Optional sexual reproduction and heritable genome recombination | ✅ Complete |
+| 26 | Deterministic experiments, accessible presentation, and large-population performance | ✅ Complete |
 
 Every phase ships as a playable milestone.
 
@@ -123,6 +125,23 @@ per-creature fitness contributions. Analytics are derived from live state and
 the existing history buffer; snapshot version 1 remains compatible and
 transient HUD analytics are not written to new saves. See
 [`docs/PHASE24.md`](./docs/PHASE24.md).
+### Phase 22: Optional sexual reproduction
+
+The reproduction control can switch between the compatible legacy asexual
+mode and sexual mating. Sexual mates seek compatible nearby partners, pay
+bounded costs, observe cooldowns, and produce deferred offspring with
+recombined genomes, mutation, and two-parent metadata. The HUD and inspector
+expose the active mode and ancestry. See
+[`docs/PHASE22.md`](./docs/PHASE22.md).
+
+### Phase 26: Reproducible, long-running experiments
+
+Phase 26 adds a deterministic seed and experiment label to the existing
+simulation data panel. Seeds and labels are included in the existing version 1
+JSON snapshots, so experiments can be shared without breaking older saves.
+Rendering now skips entities outside the camera viewport, while focus-visible
+styles, labels, canvas semantics, and reduced-motion handling improve
+accessibility. See [`docs/PHASE26.md`](./docs/PHASE26.md).
 
 ### Phase 16: Plants and growing ecosystems
 
@@ -205,6 +224,7 @@ creaturecreator/
 │   ├── PHASE20.md            # Experiment controls and live analytics notes
 │   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
 │   └── PHASE24.md            # Evolution observability
+│   └── PHASE22.md            # Optional sexual reproduction and recombination
 │
 └── assets/                   # (Future) sprites, icons, fonts
 ```

@@ -1,4 +1,4 @@
-import { randomFloat } from '../utils/random.js';
+import { random, randomFloat } from '../utils/random.js';
 
 let nextPlantId = 1;
 
@@ -33,7 +33,7 @@ export class Plant {
         }
         if (this.age >= this.lifespan && this.energy <= this.maxEnergy * 0.25) {
             this.alive = false;
-            if (Math.random() < 0.7) world.queuePlantSeed(this);
+            if (random() < 0.7) world.queuePlantSeed(this);
         }
     }
 

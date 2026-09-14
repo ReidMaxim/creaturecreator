@@ -9,7 +9,7 @@
 <body>
     <div id="container">
         <!-- Main Canvas -->
-        <canvas id="canvas"></canvas>
+        <canvas id="canvas" aria-label="Creature Creator simulation canvas"></canvas>
 
         <!-- HUD Overlay -->
         <div id="hud">
@@ -26,6 +26,10 @@
                 <div class="stat-row">
                     <span class="label">Generation</span>
                     <span id="generation" class="value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Reproduction</span>
+                    <span id="reproductionModeDisplay" class="value">asexual</span>
                 </div>
                 <div class="stat-row">
                     <span class="label">Food</span>
@@ -110,6 +114,13 @@
 
             <div id="persistence" class="panel persistence-panel">
                 <div class="panel-heading">Simulation data</div>
+                <label for="experimentLabel">Experiment label</label>
+                <input id="experimentLabel" type="text" maxlength="80" placeholder="Untitled experiment">
+                <label for="seed">Deterministic seed</label>
+                <div class="seed-row">
+                    <input id="seed" type="number" min="0" max="4294967295" step="1" inputmode="numeric">
+                    <button id="applySeed" class="btn" type="button">Reset with seed</button>
+                </div>
                 <div class="button-row">
                     <button id="saveBtn" class="btn">Save</button>
                     <button id="loadBtn" class="btn">Load</button>
@@ -177,6 +188,13 @@
 
             <!-- Bottom Right: Environment Controls -->
             <div id="envControls" class="panel bottom-right">
+                <div class="control-group">
+                    <label for="reproductionMode">Reproduction mode</label>
+                    <select id="reproductionMode" class="select">
+                        <option value="asexual" selected>Asexual (clone + mutation)</option>
+                        <option value="sexual">Sexual (mate + recombination)</option>
+                    </select>
+                </div>
                 <div class="control-group">
                     <label for="preset">Simulation preset</label>
                     <select id="preset" class="select">

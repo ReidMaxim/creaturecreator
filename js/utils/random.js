@@ -75,6 +75,20 @@ export class SeededRandom {
 // Global random instance (seeded with current time for variety)
 export const globalRandom = new SeededRandom(Date.now());
 
+export function setRandomSeed(seed) {
+    const normalized = Number.isFinite(Number(seed)) ? Number(seed) : Date.now();
+    globalRandom.seed = normalized >>> 0;
+    return globalRandom.seed;
+}
+
+export function getRandomState() {
+    return globalRandom.seed >>> 0;
+}
+
+export function setRandomState(state) {
+    if (Number.isFinite(Number(state))) globalRandom.seed = Number(state) >>> 0;
+}
+
 /**
  * Random float [0, 1)
  */

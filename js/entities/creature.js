@@ -22,7 +22,11 @@ export class Creature {
         this.age = options.age || 0;
         this.generation = options.generation || 0;
         this.parentId = options.parentId || null;
+        this.parentIds = Array.isArray(options.parentIds) ? options.parentIds.slice(0, 2)
+            : (this.parentId ? [this.parentId] : []);
         this.lineageId = options.lineageId || this.parentId || this.id;
+        this.sex = options.sex === 'male' || options.sex === 'female'
+            ? options.sex : (Math.random() < 0.5 ? 'male' : 'female');
         this.rotation = randomAngle();
         this.alive = true;
         this.isCreature = true;
@@ -121,9 +125,33 @@ export class Creature {
         if (this.age >= this.genome.reproductionAge &&
             this.energy >= this.genome.reproductionThreshold &&
             this.reproductionCooldown <= 0) {
-            this.energy *= 0.52;
-            this.reproductionCooldown = 4;
-            world.queueBirth(makeChild(this, world));
+            if (world.settings.reproductionMode === 'sexual') {
+                const mate = world.getCompatibleMate(this);
+                if (mate) {
+                    this.energy -= world.settings.mateEnergyCost;
+                    mate.energy -= world.settings.mateEnergyCost;
+                    this.reproductionCooldown = world.settings.mateCooldown;
+                    mate.reproductionCooldown = world.settings.mateCooldown;
+                    world.queueBirth(makeChild(this, world, mate));
+                } else {
+                    const nearby = world.getNearby(this.x, this.y, world.settings.mateRange, 'creatures')
+                        .find(candidate => candidate !== this && candidate.alive &&
+                            candidate.sex !== this.sex && candidate.isPredator === this.isPredator);
+                    if (nearby) {
+                        let dx = nearby.x - this.x;
+                        let dy = nearby.y - this.y;
+                        if (Math.abs(dx) > world.width / 2) dx -= Math.sign(dx) * world.width;
+                        if (Math.abs(dy) > world.height / 2) dy -= Math.sign(dy) * world.height;
+                        this.rotation = Math.atan2(
+                            dy, dx
+                        );
+                    }
+                }
+            } else {
+                this.energy *= 0.52;
+                this.reproductionCooldown = 4;
+                world.queueBirth(makeChild(this, world));
+            }
         }
     }
 
