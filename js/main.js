@@ -18,19 +18,19 @@ const state = {
     history: []
 };
 const STORAGE_KEY = 'creature-creator-phase19-save';
+const PREFERENCES_KEY = 'creature-creator-phase20-preferences';
+const INITIAL_COUNTS = { creatures: 24, food: 120, plants: 150 };
 
-for (let index = 0; index < 24; index += 1) {
-    world.addCreature(new Creature(
-        randomFloat(0, world.width),
-        randomFloat(0, world.height)
-    ));
-}
-
-for (let index = 0; index < 120; index += 1) {
-    world.spawnFood();
-}
-for (let index = 0; index < 150; index += 1) {
-    world.spawnPlant();
+function seedWorld() {
+    for (let index = 0; index < INITIAL_COUNTS.creatures; index += 1) {
+        world.addCreature(new Creature(randomFloat(0, world.width), randomFloat(0, world.height)));
+    }
+    for (let index = 0; index < INITIAL_COUNTS.food; index += 1) world.spawnFood();
+    let attempts = 0;
+    while (world.plants.length < INITIAL_COUNTS.plants && attempts < INITIAL_COUNTS.plants * 20) {
+        world.spawnPlant();
+        attempts += 1;
+    }
 }
 
 const elements = {
@@ -76,7 +76,26 @@ const elements = {
     snapshotText: document.getElementById('snapshotText'),
     persistenceStatus: document.getElementById('persistenceStatus'),
     historyCanvas: document.getElementById('historyCanvas')
+    ,reset: document.getElementById('resetBtn')
+    ,resetPause: document.getElementById('resetPause')
+    ,resetTime: document.getElementById('resetTime')
+    ,autoStart: document.getElementById('autoStart')
+    ,birthCount: document.getElementById('birthCount')
+    ,deathCount: document.getElementById('deathCount')
+    ,analyticsKillCount: document.getElementById('analyticsKillCount')
+    ,eventLog: document.getElementById('eventLog')
 };
+
+try {
+    const preferences = JSON.parse(localStorage.getItem(PREFERENCES_KEY) || '{}');
+    elements.autoStart.checked = preferences.autoStart === true;
+    elements.resetPause.checked = preferences.resetPause !== false;
+    elements.resetTime.checked = preferences.resetTime !== false;
+} catch (error) {
+    setPersistenceStatus(`Preferences unavailable: ${error.message}`, true);
+}
+
+seedWorld();
 
 function snapshot() {
     return {
@@ -116,7 +135,33 @@ function applySnapshot(data) {
     renderer.selectedCreature = null;
     inspectCreature(null);
     state.history = [];
+    drawHistory();
     updateHud();
+}
+
+function resetSimulation() {
+    world.reset(elements.resetTime.checked);
+    seedWorld();
+    renderer.selectedCreature = null;
+    inspectCreature(null);
+    state.history = [];
+    state.historyTimer = 0;
+    drawHistory();
+    if (elements.resetPause.checked) setRunning(false);
+    updateHud();
+    setPersistenceStatus(`Reset and reseeded (${INITIAL_COUNTS.creatures} creatures, ${INITIAL_COUNTS.food} food, ${INITIAL_COUNTS.plants} plants).`);
+}
+
+function savePreferences() {
+    try {
+        localStorage.setItem(PREFERENCES_KEY, JSON.stringify({
+            autoStart: elements.autoStart.checked,
+            resetPause: elements.resetPause.checked,
+            resetTime: elements.resetTime.checked
+        }));
+    } catch (error) {
+        setPersistenceStatus(`Preferences failed: ${error.message}`, true);
+    }
 }
 
 function saveToLocalStorage() {
@@ -197,6 +242,16 @@ function drawHistory() {
         });
         context.stroke();
     }
+    const fitnessMax = Math.max(1, ...state.history.map(point => point.averageFitness || 0));
+    context.strokeStyle = '#c084fc';
+    context.lineWidth = 1.25;
+    context.beginPath();
+    state.history.forEach((point, index) => {
+        const x = index * width / (state.history.length - 1);
+        const y = height - (point.averageFitness || 0) / fitnessMax * (height - 6) - 3;
+        if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+    });
+    context.stroke();
 }
 
 function updateHud() {
@@ -211,6 +266,9 @@ function updateHud() {
     elements.diversity.textContent = `${stats.species} / ${stats.lineages}`;
     elements.predatorCount.textContent = stats.predators;
     elements.killCount.textContent = stats.predationKills;
+    elements.birthCount.textContent = stats.births;
+    elements.deathCount.textContent = stats.deaths;
+    elements.analyticsKillCount.textContent = stats.predationKills;
     elements.meadowCount.textContent = stats.zoneCounts.meadow;
     elements.waterCount.textContent = stats.zoneCounts.water;
     elements.rockCount.textContent = stats.zoneCounts.rock;
@@ -227,6 +285,16 @@ function updateHud() {
     } else {
         elements.eventStatus.classList.add('hidden');
     }
+    elements.eventLog.replaceChildren(...(world.analyticsLog || []).slice().reverse().map(entry => {
+        const row = document.createElement('div');
+        const time = document.createElement('time');
+        const message = document.createElement('span');
+        time.textContent = `${Number(entry.time).toFixed(0)}s`;
+        message.textContent = entry.message;
+        message.style.color = /^#[0-9a-f]{6}$/i.test(entry.color) ? entry.color : '#cbd5e1';
+        row.append(time, message);
+        return row;
+    }));
 }
 
 function inspectCreature(creature) {
@@ -284,6 +352,10 @@ function updateSetting(input, output, key) {
 }
 
 elements.playPause.addEventListener('click', () => setRunning(!state.running));
+elements.reset.addEventListener('click', resetSimulation);
+for (const input of [elements.autoStart, elements.resetPause, elements.resetTime]) {
+    input.addEventListener('change', savePreferences);
+}
 elements.speed.addEventListener('change', () => {
     state.speed = Number(elements.speed.value);
     updateHud();
@@ -353,7 +425,10 @@ function frame(now) {
         if (state.historyTimer >= 1) {
             state.historyTimer = 0;
             const stats = world.getStats();
-            state.history.push({ creatures: stats.creatures, plants: stats.plants, predators: stats.predators });
+            state.history.push({
+                creatures: stats.creatures, plants: stats.plants, predators: stats.predators,
+                averageFitness: stats.averageFitness
+            });
             if (state.history.length > 120) state.history.shift();
             drawHistory();
         }
@@ -374,5 +449,6 @@ function frame(now) {
 }
 
 renderer.showGrid = true;
+setRunning(elements.autoStart.checked);
 updateHud();
 requestAnimationFrame(frame);

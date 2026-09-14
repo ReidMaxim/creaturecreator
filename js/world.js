@@ -52,8 +52,9 @@ export class World {
         this.settings.maxAge = 180;
         this.settings.mutationRate = 0.08;
         this.event = null;
-        this.nextEventAt = 38 + Math.random() * 18;
+        this.nextEventAt = this.time + 38 + Math.random() * 18;
         this.eventHistory = [];
+        this.analyticsLog = [];
     }
 
     /**
@@ -258,6 +259,7 @@ export class World {
         if (this.event) {
             this.event.remaining = Math.max(0, this.event.remaining - this.deltaTime);
             if (this.event.remaining === 0) {
+                this.recordEvent(`${this.event.name} ended`, this.event.color);
                 this.eventHistory.push(this.event.type);
                 this.event = null;
                 this.nextEventAt = this.time + 42 + Math.random() * 24;
@@ -281,6 +283,12 @@ export class World {
         ];
         const selected = events[Math.floor(Math.random() * events.length)];
         this.event = { ...selected, remaining: selected.duration };
+        this.recordEvent(`${selected.name} started`, selected.color);
+    }
+
+    recordEvent(message, color = '#94a3b8') {
+        this.analyticsLog.push({ time: this.time, message, color });
+        if (this.analyticsLog.length > 40) this.analyticsLog.shift();
     }
 
     /**
@@ -390,6 +398,7 @@ export class World {
             nextEventAt: this.nextEventAt,
             event: this.event ? { ...this.event, effects: { ...this.event.effects } } : null,
             eventHistory: [...this.eventHistory],
+            analyticsLog: this.analyticsLog.map(entry => ({ ...entry })),
             creatures: this.creatures.map(creature => ({
                 id: creature.id, x: creature.x, y: creature.y,
                 genome: { ...creature.genome, neuralWeights: { ...creature.genome.neuralWeights } },
@@ -467,6 +476,9 @@ export class World {
         this.nextEventAt = Math.max(this.time, finite(snapshot.nextEventAt, this.time + 45));
         this.event = snapshot.event && typeof snapshot.event === 'object' ? { ...snapshot.event } : null;
         this.eventHistory = Array.isArray(snapshot.eventHistory) ? snapshot.eventHistory.slice(-100) : [];
+        this.analyticsLog = Array.isArray(snapshot.analyticsLog)
+            ? snapshot.analyticsLog.slice(-40).filter(entry => entry && typeof entry.message === 'string')
+            : [];
         this.pendingBirths = [];
         this.pendingPlantSeeds = [];
         this.creatures = snapshot.creatures.map(data => {
@@ -505,12 +517,14 @@ export class World {
     /**
      * Reset world to initial state
      */
-    reset() {
+    reset(resetTime = true) {
+        const previousTime = this.time;
+        const previousTick = this.tick;
         this.creatures = [];
         this.food = [];
         this.plants = [];
-        this.time = 0;
-        this.tick = 0;
+        this.time = resetTime ? 0 : previousTime;
+        this.tick = resetTime ? 0 : previousTick;
         this.foodSpawnAccumulator = 0;
         this.plantSeedAccumulator = 0;
         this.pendingBirths = [];
@@ -520,8 +534,9 @@ export class World {
         this.predationKills = 0;
         this.maxGeneration = 0;
         this.event = null;
-        this.nextEventAt = 38 + Math.random() * 18;
+        this.nextEventAt = this.time + 38 + Math.random() * 18;
         this.eventHistory = [];
+        this.analyticsLog = [];
         this.spatialGrid.clear();
     }
 }
