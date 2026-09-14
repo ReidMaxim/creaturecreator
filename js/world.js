@@ -483,7 +483,6 @@ export class World {
             nextEventAt: this.nextEventAt,
             event: this.event ? { ...this.event, effects: { ...this.event.effects } } : null,
             eventHistory: [...this.eventHistory],
-            analyticsLog: this.analyticsLog.map(entry => ({ ...entry })),
             creatures: this.creatures.map(creature => ({
                 id: creature.id, x: creature.x, y: creature.y,
                 genome: { ...creature.genome, neuralWeights: { ...creature.genome.neuralWeights } },
@@ -569,9 +568,9 @@ export class World {
         this.nextEventAt = Math.max(this.time, finite(snapshot.nextEventAt, this.time + 45));
         this.event = snapshot.event && typeof snapshot.event === 'object' ? { ...snapshot.event } : null;
         this.eventHistory = Array.isArray(snapshot.eventHistory) ? snapshot.eventHistory.slice(-100) : [];
-        this.analyticsLog = Array.isArray(snapshot.analyticsLog)
-            ? snapshot.analyticsLog.slice(-40).filter(entry => entry && typeof entry.message === 'string')
-            : [];
+        // The event log is a transient HUD concern; old v1 saves may contain
+        // it, but new saves deliberately do not persist it.
+        this.analyticsLog = [];
         this.pendingBirths = [];
         this.pendingPlantSeeds = [];
         this.creatures = snapshot.creatures.map(data => {

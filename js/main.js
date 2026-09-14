@@ -2,6 +2,7 @@ import { Creature } from './entities/creature.js';
 import { Renderer } from './renderer.js';
 import { World, SIMULATION_PRESETS } from './world.js';
 import { randomFloat, setRandomSeed } from './utils/random.js';
+import { getEvolutionAnalytics, formatAnalyticsNumber, TRAITS } from './analytics.js';
 import { Genome, GENE_LIMITS, CREATOR_TRAITS, clampGeneValue } from './genetics/genome.js';
 
 const canvas = document.getElementById('canvas');
@@ -97,6 +98,12 @@ const elements = {
     ,deathCount: document.getElementById('deathCount')
     ,analyticsKillCount: document.getElementById('analyticsKillCount')
     ,eventLog: document.getElementById('eventLog')
+    ,trendMetric: document.getElementById('trendMetric')
+    ,refreshAnalytics: document.getElementById('refreshAnalytics')
+    ,trendCanvas: document.getElementById('trendCanvas')
+    ,evolutionSummary: document.getElementById('evolutionSummary')
+    ,lineageTree: document.getElementById('lineageTree')
+    ,fitnessBreakdown: document.getElementById('fitnessBreakdown')
     ,seed: document.getElementById('seed')
     ,experimentLabel: document.getElementById('experimentLabel')
     ,applySeed: document.getElementById('applySeed')
@@ -414,6 +421,7 @@ function drawHistory() {
         });
         context.stroke();
     }
+
     const fitnessMax = Math.max(1, ...state.history.map(point => point.averageFitness || 0));
     context.strokeStyle = '#c084fc';
     context.lineWidth = 1.25;
@@ -424,6 +432,52 @@ function drawHistory() {
         if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
     });
     context.stroke();
+}
+
+function drawTrend() {
+   const context = elements.trendCanvas.getContext('2d');
+   const width = elements.trendCanvas.width;
+   const height = elements.trendCanvas.height;
+   const metric = elements.trendMetric.value;
+   const points = state.history.slice(-120);
+   context.clearRect(0, 0, width, height);
+   if (points.length < 2) return;
+   const values = points.map(point => metric === 'averageFitness' || metric === 'generation'
+       ? point[metric] || 0 : (point.traits && point.traits[metric]) || 0);
+   const min = Math.min(...values);
+   const max = Math.max(...values, min + 1);
+   context.strokeStyle = '#60a5fa';
+   context.lineWidth = 1.5;
+   context.beginPath();
+   values.forEach((value, index) => {
+       const x = index * width / (values.length - 1);
+       const y = height - 5 - (value - min) / (max - min) * (height - 10);
+       if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+   });
+   context.stroke();
+   context.fillStyle = '#94a3b8';
+   context.font = '9px sans-serif';
+   context.fillText(formatAnalyticsNumber(min), 3, height - 3);
+   context.fillText(formatAnalyticsNumber(max), 3, 10);
+}
+
+function updateEvolutionPanel() {
+   const analytics = getEvolutionAnalytics(world, state.history);
+   const topSpecies = analytics.species.slice(0, 4);
+   elements.evolutionSummary.innerHTML = [
+       `<div class="analytics-summary-row"><span>Clusters</span><b>${analytics.speciesCount}</b></div>`,
+       ...topSpecies.map(group => `<div class="analytics-summary-row"><span>${group.id}</span><b>${group.count} · ${formatAnalyticsNumber(group.averageFitness)}</b></div>`),
+       `<div class="analytics-summary-row"><span>Tracked generations</span><b>${analytics.timeline.length ? analytics.timeline[analytics.timeline.length - 1].generation : 0}</b></div>`
+   ].join('');
+   elements.lineageTree.innerHTML = analytics.lineages.slice(0, 6).map(lineage =>
+       `<div class="lineage-node"><b>${lineage.id}</b> · ${lineage.count} members · G${lineage.generation}` +
+       `${lineage.parentIds.length ? ` <small>← ${lineage.parentIds.join(', ')}</small>` : ''}</div>`).join('')
+       || '<span>No living lineages.</span>';
+   elements.fitnessBreakdown.innerHTML = Object.entries({
+       Survival: analytics.fitness.survival, Food: analytics.fitness.food,
+       Predation: analytics.fitness.predation, Energy: analytics.fitness.energy
+   }).map(([name, value]) => `<div class="fitness-row"><span>${name}</span><b>${formatAnalyticsNumber(value)}</b></div>`).join('');
+   drawTrend();
 }
 
 function updateHud() {
@@ -470,6 +524,7 @@ function updateHud() {
         row.append(time, message);
         return row;
     }));
+    updateEvolutionPanel();
 }
 
 function inspectCreature(creature) {
@@ -513,7 +568,12 @@ function inspectCreature(creature) {
         &middot; travel ${creature.behaviorStats.distanceTravelled.toFixed(0)}<br>
         Action: turn ${(creature.brain.lastAction.turn).toFixed(2)}
         &middot; thrust ${(creature.brain.lastAction.thrust).toFixed(2)}<br>
-        Reproduces at ${creature.genome.reproductionAge.toFixed(1)}s / ${creature.genome.reproductionThreshold.toFixed(0)} energy
+        Reproduces at ${creature.genome.reproductionAge.toFixed(1)}s / ${creature.genome.reproductionThreshold.toFixed(0)} energy<br>
+        Lineage ${creature.lineageId || creature.id} &middot; parent ${creature.parentId || 'founder'}<br>
+        Fitness breakdown: survival ${creature.age.toFixed(1)} +
+        food ${(creature.behaviorStats.foodEaten * 10).toFixed(1)} +
+        kills ${(creature.behaviorStats.kills * 18).toFixed(1)} +
+        energy ${(Math.min(creature.energy, creature.maxEnergy) * .05).toFixed(1)}
     `;
 }
 
@@ -591,6 +651,8 @@ elements.resourcePressureSlider.addEventListener('input', () =>
     updateSetting(elements.resourcePressureSlider, elements.resourcePressureValue, 'resourcePressure')
 );
 elements.closeInspector.addEventListener('click', () => inspectCreature(null));
+elements.trendMetric.addEventListener('change', drawTrend);
+elements.refreshAnalytics.addEventListener('click', updateEvolutionPanel);
 canvas.addEventListener('click', (event) => {
     const bounds = canvas.getBoundingClientRect();
     const point = renderer.screenToWorld(event.clientX - bounds.left, event.clientY - bounds.top);
@@ -645,10 +707,15 @@ function frame(now) {
             const stats = world.getStats();
             state.history.push({
                 creatures: stats.creatures, plants: stats.plants, predators: stats.predators,
-                averageFitness: stats.averageFitness
+                averageFitness: stats.averageFitness, generation: stats.generation,
+                time: stats.time,
+                traits: Object.fromEntries(TRAITS.map(([key]) => [key,
+                    world.creatures.length ? world.creatures.reduce((sum, creature) =>
+                        sum + Number(creature.genome[key] || 0), 0) / world.creatures.length : 0]))
             });
             if (state.history.length > 120) state.history.shift();
             drawHistory();
+            drawTrend();
         }
     }
     updateCamera(deltaTime);

@@ -63,6 +63,7 @@ python -m http.server 8000
 | 19 | Persistence, JSON import/export, and population history | ✅ Complete |
 | 20 | Experiment controls and live analytics | ✅ Complete |
 | 21 | Ecosystem balance controls, presets, and resource analytics | ✅ Complete |
+| 24 | Evolution observability: clusters, lineages, trends, and fitness | ✅ Complete |
 | 22 | Optional sexual reproduction and heritable genome recombination | ✅ Complete |
 | 26 | Deterministic experiments, accessible presentation, and large-population performance | ✅ Complete |
 | 25 | Player creature creator, bounded traits, injection, and local presets | ✅ Complete |
@@ -116,6 +117,15 @@ selected preset is retained in preferences and serialized snapshots. The HUD
 reports resource pressure and the predator-to-herbivore population ratio so
 long-running outcomes are measurable. See [`docs/PHASE21.md`](./docs/PHASE21.md).
 
+### Phase 24: Evolution observability
+
+The Evolution observatory adds bounded species clustering, lineage summaries
+and parent trees, selectable trait and fitness trends, a generation timeline,
+and fitness-component breakdowns. The inspector now includes lineage and
+per-creature fitness contributions. Analytics are derived from live state and
+the existing history buffer; snapshot version 1 remains compatible and
+transient HUD analytics are not written to new saves. See
+[`docs/PHASE24.md`](./docs/PHASE24.md).
 ### Phase 22: Optional sexual reproduction
 
 The reproduction control can switch between the compatible legacy asexual
@@ -185,6 +195,7 @@ creaturecreator/
 │   ├── main.js               # Bootstrap & event loop
 │   ├── world.js              # World state, zones, events & physics
 │   ├── renderer.js           # Canvas rendering
+│   ├── analytics.js          # Bounded evolution summaries and trends
 │   │
 │   ├── entities/
 │   │   ├── creature.js       # Creature class
@@ -222,6 +233,7 @@ creaturecreator/
 │   ├── PHASE19.md            # Persistence and population history notes
 │   ├── PHASE20.md            # Experiment controls and live analytics notes
 │   ├── PHASE21.md            # Ecosystem balance controls and resource analytics
+│   └── PHASE24.md            # Evolution observability
 │   └── PHASE22.md            # Optional sexual reproduction and recombination
 │   ├── PHASE22.md            # Optional sexual reproduction and recombination
 │   └── PHASE25.md            # Player creator tools and local creature presets
@@ -295,6 +307,6 @@ MIT (add license choice later)
 
 ## Status
 
-**Current Phase:** 22 (Optional sexual reproduction)
+**Current Phase:** 24 (Evolution observability)
 **Last Updated:** 2026-09-13
 **Maintainer:** ReidMaxim
