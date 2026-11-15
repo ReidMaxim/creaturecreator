@@ -180,45 +180,60 @@ export class World {
         }
     }
 
-        // Phase 29: Update seasonal cycle and disease pressure
-                this.updateSeasonalCycle();
-                this.decayDiseasePressure();
+    applyPreset(name) {
+        const preset = PRESET_NAMES.includes(name) ? name : 'sandbox';
+        this.settings = { ...this.settings, ...SIMULATION_PRESETS[preset], preset };
+        return this.settings;
+    }
 
-                // Add disease pressure from diseased creatures
-                for (const creature of this.creatures) {
-                    if (creature.diseases && creature.diseases.length > 0) {
-                        this.addDiseasePressure(creature.x, creature.y, 0.01 * creature.diseases.length);
-                    }
-                }
+    /** Update world state for one frame, including seasonal effects. */
+    update(deltaTime, simulationSpeed = 1) {
+        this.deltaTime = deltaTime * simulationSpeed;
+        this.time += this.deltaTime;
+        this.updateEnvironmentalEvent();
+        this.rebuildSpatialGrid();
 
-                // Update creatures (will be implemented in creature class)
-                for (const creature of [...this.creatures]) {
-                    if (creature.update) {
-                        creature.update(deltaTime * simulationSpeed, this);
-                    }
-                }
+        // Update seasonal cycle and disease pressure
+        this.updateSeasonalCycle();
+        this.decayDiseasePressure();
+        this.updateFoodSpawning();
+        this.updatePlants();
 
-                // Remove dead creatures
-                const living = [];
-                for (const creature of this.creatures) {
-                    if (creature.alive !== false) living.push(creature);
-                    else this.deaths += 1;
-                }
-                this.creatures = living;
-                this.plants = this.plants.filter(plant => plant.alive);
-                for (const child of this.pendingBirths.splice(0)) {
-                    const creature = new Creature(child.x, child.y, child);
-                    this.addCreature(creature);
-                    this.recordEvolution(creature);
-                    this.births += 1;
-                }
-                for (const seed of this.pendingPlantSeeds.splice(0)) this.addPlant(seed);
-
-                // Rebuild spatial grid for proximity queries
-                this.rebuildSpatialGrid();
-
-                this.tick++;
+        // Add disease pressure from diseased creatures
+        for (const creature of this.creatures) {
+            if (creature.diseases && creature.diseases.length > 0) {
+                this.addDiseasePressure(creature.x, creature.y, 0.01 * creature.diseases.length);
             }
+        }
+
+        // Update creatures (will be implemented in creature class)
+        for (const creature of [...this.creatures]) {
+            if (creature.update) {
+                creature.update(deltaTime * simulationSpeed, this);
+            }
+        }
+
+        // Remove dead creatures
+        const living = [];
+        for (const creature of this.creatures) {
+            if (creature.alive !== false) living.push(creature);
+            else this.deaths += 1;
+        }
+        this.creatures = living;
+        this.plants = this.plants.filter(plant => plant.alive);
+        for (const child of this.pendingBirths.splice(0)) {
+            const creature = new Creature(child.x, child.y, child);
+            this.addCreature(creature);
+            this.recordEvolution(creature);
+            this.births += 1;
+        }
+        for (const seed of this.pendingPlantSeeds.splice(0)) this.addPlant(seed);
+
+        // Rebuild spatial grid for proximity queries
+        this.rebuildSpatialGrid();
+
+        this.tick++;
+    }
 
     updatePlants() {
             // Phase 29: Apply seasonal effects to plant spawning

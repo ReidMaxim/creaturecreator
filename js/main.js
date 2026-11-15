@@ -326,12 +326,12 @@ function updateHud() {
 
     // Phase 29: Seasonal display
     const seasonal = world.getSeasonalEffects();
-    elements.seasonName.textContent = seasonal.name.charAt(0).toUpperCase() + seasonal.name.slice(1);
-    elements.seasonTemp.textContent = `${Math.round(seasonal.temperature)}°C`;
+    elements.seasonName.textContent = seasonal.seasonName.charAt(0).toUpperCase() + seasonal.seasonName.slice(1);
+    elements.seasonTemp.textContent = `${seasonal.temperature.toFixed(2)} / 1`;
     elements.timeOfDay.textContent = world.isNight ? 'Night' : 'Day';
-    const seasonProgress = world.seasonTime / world.SEASONS[world.seasonIndex].duration;
+    const seasonProgress = seasonal.seasonProgress;
     elements.seasonProgressBar.style.width = `${Math.min(100, seasonProgress * 100)}%`;
-    elements.seasonProgressBar.style.background = seasonal.color;
+    elements.seasonProgressBar.style.background = seasonal.seasonColor;
 
     // Phase 29: Disease HUD
     elements.infectedCount.textContent = stats.infectedCount || 0;
