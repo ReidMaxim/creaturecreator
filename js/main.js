@@ -1,6 +1,6 @@
 import { Creature } from './entities/creature.js';
 import { Renderer } from './renderer.js';
-import { World, SIMULATION_PRESETS } from './world.js';
+import { World, SIMULATION_PRESETS } from './world.js?v=startup-fix-20261114';
 import { randomFloat } from './utils/random.js';
 
 const canvas = document.getElementById('canvas');
